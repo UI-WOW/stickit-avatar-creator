@@ -1,14 +1,30 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-import { Button } from '@/components/ui/button';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Header from '../components/Header.astro';
+import CreateStickerGroupButton from '../components/CreateStickerGroupButton.astro';
+import StickerGroupCard from '../components/StickerGroupCard.astro';
 ---
 
 <Layout>
-	<!-- <Welcome /> -->
-	<h1 class="text-2xl font-bold text-center">Stickit Avatar Creator</h1>
-	<Button>Click me</Button>
+	<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+		<div class="container mx-auto px-4 py-8">
+			<!-- Header Section -->
+			<Header />
+			
+			<!-- Main CTA Section -->
+			<CreateStickerGroupButton />
+			
+			<!-- Sticker Groups Section -->
+			<div class="max-w-4xl mx-auto">
+				<h2 class="text-3xl font-bold text-center mb-8 text-gray-800">Your Sticker Collections</h2>
+				
+				<div class="space-y-6">
+					<StickerGroupCard groupName="Tech Assistant" stickerCount={6} />
+					<StickerGroupCard groupName="Customer Support" stickerCount={3} />
+					<StickerGroupCard groupName="Marketing Bot" stickerCount={4} />
+				</div>
+				
+			</div>
+		</div>
+	</div>
 </Layout>
