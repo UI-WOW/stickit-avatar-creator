@@ -1,0 +1,3 @@
+packages:
+  - "entrypoints/*" # https services that the user will interact with
+  - "services/*" # services available 

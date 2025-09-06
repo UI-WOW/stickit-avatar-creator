@@ -1,0 +1,23 @@
+{
+  "name": "@repo/entrypoints-API-core",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8002",
+    "build-wrangler-local": "tsc && wrangler deploy --dry-run",
+    "deploy": "tsc && wrangler deploy",
+    "deploy:staging": "tsc && wrangler deploy --env staging",
+    "deploy:production": "tsc && wrangler deploy --env production",
+    "type-check": "tsc --noEmit",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "^1.0.0",
+    "hono": "^4.9.4",
+    "ai": "^5.0.30"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250903.0",
+    "typescript": "latest",
+    "wrangler": "^4.17.0"
+  }
+}

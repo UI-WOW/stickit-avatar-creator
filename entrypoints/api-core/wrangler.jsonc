@@ -1,0 +1,21 @@
+{
+  "name": "chatbot-fito-cf-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-08-25",
+
+  "r2_buckets": [
+    {
+      "binding": "GENERAL-STORAGE-STICKIT-AVATAR-CREATOR",
+      "bucket_name": "general-storage-stickit-avatar-creator"
+    }
+  ],
+  "kv_namespaces": [
+
+  ],
+
+  "observability": {
+    "logs": {
+      "enabled": true
+    }
+  }
+}
