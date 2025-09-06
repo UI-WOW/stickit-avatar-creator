@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ChatInterface from '../components/ChatInterface.astro';
+---
+
+<Layout>
+	<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden">
+		
+		<div class="container mx-auto px-4 py-8 relative z-10">
+			<!-- Header -->
+			<div class="text-center mb-8">
+				<h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+					Sticker Chat Demo
+				</h1>
+				<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+					Experience how your custom stickers come to life in AI conversations. 
+					Try chatting with our demo assistant and see how it responds with your personalized stickers!
+				</p>
+			</div>
+			
+			<!-- Chat Interface -->
+			<div class="flex justify-center">
+				<ChatInterface />
+			</div>
+			
+			<!-- Back Button -->
+			<div class="text-center mt-8">
+				<a href="/" class="inline-flex items-center px-6 py-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 text-gray-700 hover:text-gray-900">
+					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+					</svg>
+					Back to Collections
+				</a>
+			</div>
+		</div>
+	</div>
+</Layout>
