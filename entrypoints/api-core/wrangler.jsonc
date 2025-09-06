@@ -5,8 +5,12 @@
 
   "r2_buckets": [
     {
-      "binding": "GENERAL-STORAGE-STICKIT-AVATAR-CREATOR",
+      "binding": "GENERAL_STORAGE_STICKIT_AVATAR_CREATOR",
       "bucket_name": "general-storage-stickit-avatar-creator"
+    },
+    {
+      "binding": "LOGGER_STORAGE_STICKIT_AVATAR_CREATOR",
+      "bucket_name": "logger-storage-stickit-avatar-creator"
     }
   ],
   "kv_namespaces": [

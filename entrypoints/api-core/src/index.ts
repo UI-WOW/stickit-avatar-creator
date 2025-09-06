@@ -1,17 +1,17 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { Bindings } from './bindings.js'
-
+import { createRequestLoggerMiddleware } from './middleware/requestLogger.js'
 
 export type honoContext = { Bindings: Bindings, Variables: {} }
 
 const app = new Hono<honoContext>()
 
-// // Middleware to log all requests
-// app.use('*', async (c, next) => {
-//   const requestLoggerMiddleware = createRequestLoggerMiddleware(c.env.LOGGER_STORAGE);
-//   return requestLoggerMiddleware(c, next);
-// });
+// Middleware to log all requests
+app.use('*', async (c, next) => {
+  const requestLoggerMiddleware = createRequestLoggerMiddleware(c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR);
+  return requestLoggerMiddleware(c, next);
+});
 
 
 // Middleware to inject providers
