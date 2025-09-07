@@ -24,7 +24,7 @@ app.use('*', cors({
     return allowedOrigins.includes(origin) ? origin : 'http://localhost:8001'
   },
   credentials: true,
-  allowMethods: ['GET','POST','OPTIONS'],
+  allowMethods: ['GET','POST','DELETE','OPTIONS'],
   allowHeaders: ['Content-Type']
 }))
 
@@ -63,45 +63,54 @@ app.get('/', (c) => {
 })
 
 // Simple KV-backed user collections and configs using session cookie as user id
-function getUserIdFromCookie(c: any): string | null {
+function getUserId(c: any): string | null {
   const cookieHeader = c.req.header('cookie') || ''
   const match = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
   return match ? decodeURIComponent(match[1]) : null
 }
 
-app.get('/collections', async (c) => {
-  const userId = getUserIdFromCookie(c)
+app.get('/sticker-groups', async (c) => {
+  const userId = getUserId(c)
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const items = await KvService.listCollections(c.env.APP_KV, userId)
+  const items = await KvService.listGroups(c.env.APP_KV, userId)
   return c.json({ items })
 })
 
-app.post('/collections', async (c) => {
-  const userId = getUserIdFromCookie(c)
+app.post('/sticker-groups', async (c) => {
+  const userId = getUserId(c)
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const body = await c.req.json().catch(() => ({}))
   const name = body?.name || 'Untitled'
-  const item = await KvService.addCollection(c.env.APP_KV, userId, name)
+  const item = await KvService.addGroup(c.env.APP_KV, userId, name)
   return c.json(item, 201)
 })
 
-app.get('/collections/:id/configs', async (c) => {
-  const userId = getUserIdFromCookie(c)
+app.get('/sticker-groups/:id/configs', async (c) => {
+  const userId = getUserId(c)
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const collectionId = c.req.param('id')
-  const items = await KvService.listConfigs(c.env.APP_KV, userId, collectionId)
+  const groupId = c.req.param('id')
+  const items = await KvService.listConfigs(c.env.APP_KV, userId, groupId)
   return c.json({ items })
 })
 
-app.post('/collections/:id/configs', async (c) => {
-  const userId = getUserIdFromCookie(c)
+app.post('/sticker-groups/:id/configs', async (c) => {
+  const userId = getUserId(c)
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const collectionId = c.req.param('id')
+  const groupId = c.req.param('id')
   const body = await c.req.json().catch(() => ({}))
   const input = body?.input ?? {}
   const imageUrls = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
-  const item = await KvService.addConfig(c.env.APP_KV, userId, collectionId, input, imageUrls)
+  const item = await KvService.addConfig(c.env.APP_KV, userId, groupId, input, imageUrls)
   return c.json(item, 201)
+})
+
+app.delete('/sticker-groups/:id', async (c) => {
+  const userId = getUserId(c)
+  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const groupId = c.req.param('id')
+  const deleted = await KvService.deleteGroup(c.env.APP_KV, userId, groupId)
+  if (!deleted) return c.json({ success: false, message: 'not found' }, 404)
+  return c.json({ success: true })
 })
 
 // Route to generate and save an image using Gemini 2.5 Flash Image

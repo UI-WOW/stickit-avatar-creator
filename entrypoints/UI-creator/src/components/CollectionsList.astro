@@ -3,7 +3,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 ---
 
 <div id="collections-root" class="space-y-6">
-    <div class="text-center text-gray-500" id="collections-loading">Loading your collections...</div>
+    <div class="text-center text-gray-500" id="collections-loading">Loading your sticker groups...</div>
 </div>
 
 <script>
@@ -14,7 +14,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
     async function loadCollections() {
         if (!root) return;
         try {
-            const url = `${API_BASE}/collections`;
+            const url = `${API_BASE}/sticker-groups`;
             const res = await fetch(url, { credentials: 'include' });
             if (!res.ok) {
                 throw new Error(`Request failed (${res.status})`);
@@ -27,7 +27,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
             if (items.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'text-center text-gray-500';
-                empty.textContent = 'No collections yet. Create your first collection to get started!';
+                empty.textContent = 'No sticker groups yet. Create your first group to get started!';
                 root.appendChild(empty);
                 return;
             }
@@ -57,7 +57,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
                 del.addEventListener('click', async () => {
                     if (!confirm('Delete this collection?')) return;
                     try {
-                        const r = await fetch(`${API_BASE}/collections/${col.id}`, { method: 'DELETE', credentials: 'include' });
+                        const r = await fetch(`${API_BASE}/sticker-groups/${col.id}`, { method: 'DELETE', credentials: 'include' });
                         if (!r.ok) throw new Error('Delete failed');
                         location.reload();
                     } catch (e) {

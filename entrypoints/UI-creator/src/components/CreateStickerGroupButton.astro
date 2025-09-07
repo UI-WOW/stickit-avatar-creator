@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button';
 <!-- Modal -->
 <div id="create-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4">
   <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-    <h3 class="text-xl font-semibold text-gray-800">Create a new collection</h3>
-    <p class="text-sm text-gray-500 mt-1">Give your sticker collection a name.</p>
+    <h3 class="text-xl font-semibold text-gray-800">Create a new sticker group</h3>
+    <p class="text-sm text-gray-500 mt-1">Give your sticker group a name.</p>
     <input id="collection-name" class="mt-4 w-full rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Tech Assistant" />
     <div class="mt-6 flex justify-end gap-3">
       <button id="cancel-create" class="px-4 py-2 rounded-md border text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -53,7 +53,7 @@ import { Button } from '@/components/ui/button';
   confirmBtn?.addEventListener('click', async () => {
     const name = input ? input.value.trim() : '';
     try {
-      const res = await fetch(`${API_BASE}/collections`, {
+      const res = await fetch(`${API_BASE}/sticker-groups`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
