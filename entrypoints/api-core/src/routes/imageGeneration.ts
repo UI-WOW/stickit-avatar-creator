@@ -221,4 +221,185 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
       }, 500);
     }
   })
+
+  // Route to generate individual sticker
+  app.post('/generate-sticker', async (c) => {
+    const startTime = Date.now();
+    console.log('🎨 Starting individual sticker generation request...');
+    
+    try {
+      const body = await c.req.json()
+      const { stickerData, brandIdentity, avatarCreation, groupId } = body
+      
+      console.log('📋 Sticker generation request received:', {
+        groupId,
+        stickerName: stickerData?.name,
+        stickerScenario: stickerData?.scenario,
+        hasBrandIdentity: !!brandIdentity,
+        hasAvatarCreation: !!avatarCreation
+      });
+      
+      if (!stickerData || !brandIdentity || !avatarCreation) {
+        console.error('❌ Missing required data for sticker generation');
+        return c.json({ error: 'Missing required data: stickerData, brandIdentity, and avatarCreation are required' }, 400)
+      }
+
+      // Build comprehensive prompt for sticker generation
+      console.log('🔨 Building sticker generation prompt...');
+      let prompt = `Create a kawaii-style sticker based on the following specifications:\n\n`
+      
+      // Add sticker-specific information
+      prompt += `Sticker Name: ${stickerData.name}\n`
+      prompt += `Usage Scenario: ${stickerData.scenario}\n`
+      if (stickerData.description) {
+        prompt += `Description: ${stickerData.description}\n`
+      }
+      if (stickerData.notes) {
+        prompt += `Additional Notes: ${stickerData.notes}\n`
+      }
+      
+      // Add brand identity information
+      if (brandIdentity.avatarType) {
+        prompt += `\nAvatar Type: ${brandIdentity.avatarType}\n`
+      }
+      
+      if (brandIdentity.avatarDescription) {
+        prompt += `Avatar Purpose: ${brandIdentity.avatarDescription}\n`
+      }
+      
+      if (brandIdentity.personalityTraits && brandIdentity.personalityTraits.length > 0) {
+        prompt += `Personality Traits: ${brandIdentity.personalityTraits.join(', ')}\n`
+      }
+      
+      // Add avatar creation details
+      if (avatarCreation.description) {
+        prompt += `Avatar Visual Description: ${avatarCreation.description}\n`
+      }
+      
+      if (avatarCreation.selectedStyle && avatarCreation.selectedStyle !== 'No specific style') {
+        prompt += `Style Preference: ${avatarCreation.selectedStyle}\n`
+      }
+      
+      if (avatarCreation.colorPalette) {
+        const colors = Object.entries(avatarCreation.colorPalette)
+          .filter(([_, value]) => value)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ')
+        if (colors) {
+          prompt += `Color Palette: ${colors}\n`
+        }
+      }
+      
+      // Add technical specifications for sticker format
+      prompt += `\nTechnical Requirements:
+- Kawaii-style design with thick black outlines (5-6 pixels wide)
+- Bold, clean lines with simple cel-shading
+- Strong silhouette with prominent black borders around all edges
+- Expressive and appropriate for the scenario described
+- White background
+- High contrast and vibrant colors
+- Optimized for sticker format (clear, recognizable at small sizes)
+- Professional yet approachable design
+- Should match the avatar's personality and style`
+      
+      console.log('📝 Generated sticker prompt length:', prompt.length, 'characters');
+      console.log('🤖 Calling Gemini API for sticker generation...');
+      
+      // Get Gemini instance from context
+      const gemini = c.get('gemini');
+      
+      if (!gemini) {
+        console.error('❌ Gemini instance not found in context');
+        return c.json({ error: 'AI service not available' }, 500);
+      }
+      
+      // Generate image using Gemini 2.5 Flash Image
+      const geminiStartTime = Date.now();
+      const response = await gemini.models.generateContent({
+        model: "gemini-2.5-flash-image-preview",
+        contents: prompt,
+      });
+      const geminiEndTime = Date.now();
+      
+      console.log(`⏱️ Gemini API call completed in ${geminiEndTime - geminiStartTime}ms`);
+
+      let imageData: ArrayBuffer | null = null;
+      const filename = `sticker-${groupId || 'temp'}-${Date.now()}-${Math.random().toString(36).substring(2)}.png`;
+      console.log('📁 Generated sticker filename:', filename);
+
+      // Extract image data from response
+      console.log('🔍 Extracting sticker image data from Gemini response...');
+      if (response.candidates && response.candidates[0]?.content?.parts) {
+        for (const part of response.candidates[0].content.parts) {
+          if (part.inlineData?.data) {
+            const base64Data = part.inlineData.data;
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            imageData = bytes.buffer;
+            console.log('✅ Sticker image data extracted successfully, size:', imageData.byteLength, 'bytes');
+            break;
+          }
+        }
+      }
+
+      if (!imageData) {
+        console.error('❌ Failed to extract sticker image data from Gemini response');
+        return c.json({ error: 'Failed to generate sticker from Gemini' }, 500);
+      }
+      
+      // Save to R2 bucket
+      console.log('💾 Saving sticker image to R2 storage...');
+      const saveStartTime = Date.now();
+      await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.put(filename, imageData, {
+        httpMetadata: {
+          contentType: 'image/png'
+        }
+      });
+      const saveEndTime = Date.now();
+      console.log(`✅ Sticker image saved to R2 in ${saveEndTime - saveStartTime}ms`);
+
+      // Generate public URL for the image
+      const url = new URL(c.req.url);
+      const baseUrl = `${url.protocol}//${url.host}`;
+      const imageUrl = `${baseUrl}/get-avatar-image?filename=${encodeURIComponent(filename)}`;
+      console.log('🔗 Generated sticker image URL:', imageUrl);
+
+      const totalTime = Date.now() - startTime;
+      console.log(`🎉 Sticker generation completed successfully in ${totalTime}ms`);
+
+      // Return sticker data with image info
+      const stickerResult = {
+        id: Date.now().toString(),
+        name: stickerData.name,
+        scenario: stickerData.scenario,
+        description: stickerData.description || '',
+        notes: stickerData.notes || '',
+        filename: filename,
+        url: imageUrl,
+        size: imageData.byteLength,
+        generationTime: totalTime,
+        generatedAt: new Date().toISOString()
+      };
+
+      return c.json({ 
+        success: true, 
+        message: 'Sticker generated successfully',
+        sticker: stickerResult
+      });
+
+    } catch (error) {
+      const totalTime = Date.now() - startTime;
+      console.error(`❌ Sticker generation failed after ${totalTime}ms:`, error)
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return c.json({ 
+        error: 'Sticker generation failed', 
+        details: errorMessage,
+        generationTime: totalTime
+      }, 500);
+    }
+  })
 }

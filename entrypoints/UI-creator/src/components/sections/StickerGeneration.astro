@@ -249,6 +249,291 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		const cancelBtn = document.getElementById('cancelBtn');
 		const form = document.getElementById('addStickerForm');
 		
+		// Sticker management
+		let generatedStickers = []; // Store generated stickers
+		const API_BASE = 'http://localhost:8002';
+		
+		// Helper function to update stickers display
+		function updateStickersDisplay() {
+			console.log('🔄 updateStickersDisplay() called');
+			console.log('📊 generatedStickers length:', generatedStickers.length);
+			console.log('📊 generatedStickers content:', generatedStickers);
+			
+			const container = document.getElementById('stickersContainer');
+			if (!container) {
+				console.error('❌ stickersContainer not found');
+				return;
+			}
+			
+			// Clear existing content
+			container.innerHTML = '';
+			console.log('🧹 Cleared container content');
+			
+			// Add generated stickers
+			generatedStickers.forEach((sticker, index) => {
+				console.log(`🎨 Creating sticker element ${index}:`, sticker);
+				const stickerElement = createStickerElement(sticker, index);
+				container.appendChild(stickerElement);
+			});
+			
+			// Add default stickers if no generated ones
+			if (generatedStickers.length === 0) {
+				const defaultStickers = [
+					{ 
+						name: 'Happy Response', 
+						scenario: 'When user is satisfied with the result',
+						icon: '😊',
+						description: 'Shows satisfaction and positive feedback'
+					},
+					{ 
+						name: 'Surprised Reaction', 
+						scenario: 'When unexpected results occur',
+						icon: '😲',
+						description: 'Expresses surprise or amazement'
+					},
+					{ 
+						name: 'Celebration', 
+						scenario: 'When user achieves something',
+						icon: '🎉',
+						description: 'Celebrates achievements and milestones'
+					},
+					{ 
+						name: 'Helpful Assistant', 
+						scenario: 'When offering assistance',
+						icon: '🤝',
+						description: 'Shows willingness to help'
+					}
+				];
+				
+				defaultStickers.forEach((sticker, index) => {
+					const stickerElement = createDefaultStickerElement(sticker, index);
+					container.appendChild(stickerElement);
+				});
+			}
+			console.log('✅ updateStickersDisplay() completed');
+		}
+		
+		// Helper function to create sticker element
+		function createStickerElement(sticker, index) {
+			console.log(`🎨 createStickerElement called for index ${index}:`, sticker);
+			
+			const div = document.createElement('div');
+			div.className = 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-indigo-200';
+			div.setAttribute('data-sticker-id', sticker.id);
+			
+			// Check if this is a generating sticker
+			const isGenerating = sticker.isGenerating || !sticker.url;
+			console.log(`🎯 Sticker ${index} isGenerating:`, isGenerating, 'has URL:', !!sticker.url);
+			
+			div.innerHTML = `
+				<!-- Sticker Preview -->
+				<div class="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mb-6 hover:scale-110 transition-transform duration-200">
+					${isGenerating ? `
+						<div class="w-full h-full flex flex-col items-center justify-center">
+							<div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-3"></div>
+							<div class="text-xs text-indigo-600 font-medium text-center px-2">Generating ${sticker.name}...</div>
+						</div>
+					` : `
+						<img src="${sticker.url}" alt="${sticker.name}" class="w-24 h-24 rounded-lg hover:scale-105 transition-transform duration-200" />
+					`}
+				</div>
+				
+				<!-- Sticker Details -->
+				<div class="space-y-4">
+					<!-- Title -->
+					<div class="flex items-center justify-center space-x-2">
+						<h4 class="font-semibold text-gray-800 text-lg">${sticker.name}</h4>
+					</div>
+					
+					<p class="text-sm text-gray-600 text-center">${sticker.description}</p>
+					
+					<!-- Usage Scenario -->
+					<div class="bg-gray-50 rounded-lg p-3">
+						<div class="text-xs font-medium text-gray-500 mb-1">USED WHEN:</div>
+						<div class="text-sm text-gray-700">${sticker.scenario}</div>
+					</div>
+					
+					<!-- Actions -->
+					<div class="flex gap-2 flex-wrap">
+						${isGenerating ? `
+							<button class="flex-1 bg-gray-300 text-gray-500 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed" disabled>
+								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+								</svg>
+								Generating...
+							</button>
+							<button class="flex-1 text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 delete-sticker" data-sticker-id="${sticker.id}">
+								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+								</svg>
+								Cancel
+							</button>
+						` : `
+							<button class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 regenerate-sticker" data-sticker-id="${sticker.id}">
+								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+								</svg>
+								Regenerate
+							</button>
+							<button class="flex-1 text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 delete-sticker" data-sticker-id="${sticker.id}">
+								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+								</svg>
+								Delete
+							</button>
+						`}
+					</div>
+				</div>
+			`;
+			
+			return div;
+		}
+		
+		// Helper function to create default sticker element
+		function createDefaultStickerElement(sticker, index) {
+			const div = document.createElement('div');
+			div.className = 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-indigo-200';
+			div.setAttribute('data-sticker-id', index);
+			
+			div.innerHTML = `
+				<!-- Sticker Preview -->
+				<div class="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mb-6 hover:scale-110 transition-transform duration-200">
+					<img src="/dummy-sticker.webp" alt="${sticker.name}" class="w-24 h-24 rounded-lg hover:scale-105 transition-transform duration-200" />
+				</div>
+				
+				<!-- Sticker Details -->
+				<div class="space-y-4">
+					<!-- Title and Icon -->
+					<div class="flex items-center justify-center space-x-2">
+						<span class="text-2xl">${sticker.icon}</span>
+						<h4 class="font-semibold text-gray-800 text-lg">${sticker.name}</h4>
+					</div>
+					
+					<p class="text-sm text-gray-600 text-center">${sticker.description}</p>
+					
+					<!-- Usage Scenario -->
+					<div class="bg-gray-50 rounded-lg p-3">
+						<div class="text-xs font-medium text-gray-500 mb-1">USED WHEN:</div>
+						<div class="text-sm text-gray-700">${sticker.scenario}</div>
+					</div>
+					
+					<!-- Actions -->
+					<div class="flex gap-2 flex-wrap">
+						<button class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 generate-default-sticker" data-sticker-id="${index}">
+							<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+							</svg>
+							Generate
+						</button>
+					</div>
+				</div>
+			`;
+			
+			return div;
+		}
+		
+		// Helper function to save stickers to centralized state
+		function saveStickersToState() {
+			console.log('💾 Saving stickers to centralized state:', generatedStickers.length, 'stickers');
+			
+			window.dispatchEvent(new CustomEvent('sectionDataUpdated', { 
+				detail: {
+					stickerGeneration: {
+						stickers: generatedStickers
+					}
+				}
+			}));
+			window.dispatchEvent(new CustomEvent('requestSave'));
+		}
+		
+		// Helper function to show loading state for existing stickers
+		function showStickerLoadingState(stickerId, message) {
+			const stickerElement = document.querySelector(`[data-sticker-id="${stickerId}"]`);
+			if (!stickerElement) return;
+			
+			const previewArea = stickerElement.querySelector('.w-32.h-32');
+			const regenerateBtn = stickerElement.querySelector('.regenerate-sticker');
+			
+			if (previewArea) {
+				previewArea.innerHTML = `
+					<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
+						<div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-3"></div>
+						<div class="text-xs text-indigo-600 font-medium text-center px-2">${message}</div>
+					</div>
+				`;
+			}
+			
+			// Update the regenerate button with loading state
+			if (regenerateBtn) {
+				regenerateBtn.innerHTML = `
+					<svg class="w-3 h-3 mr-1 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Regenerating...
+				`;
+				regenerateBtn.disabled = true;
+			}
+		}
+		
+		// Helper function to show loading state for default stickers
+		function showDefaultStickerLoadingState(stickerIndex, message) {
+			const stickerElement = document.querySelector(`[data-sticker-id="${stickerIndex}"]`);
+			if (!stickerElement) return;
+			
+			const previewArea = stickerElement.querySelector('.w-32.h-32');
+			if (previewArea) {
+				previewArea.innerHTML = `
+					<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg">
+						<div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-3"></div>
+						<div class="text-xs text-indigo-600 font-medium text-center px-2">${message}</div>
+					</div>
+				`;
+			}
+		}
+		
+		// Helper function to show error state for existing stickers
+		function showStickerErrorState(stickerId, message) {
+			const stickerElement = document.querySelector(`[data-sticker-id="${stickerId}"]`);
+			if (!stickerElement) return;
+			
+			const previewArea = stickerElement.querySelector('.w-32.h-32');
+			if (previewArea) {
+				previewArea.innerHTML = `
+					<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-lg">
+						<div class="text-red-500 mb-2">
+							<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+							</svg>
+						</div>
+						<div class="text-xs text-red-600 font-medium text-center px-2">${message}</div>
+						<button class="mt-2 text-xs text-red-500 hover:text-red-700 underline" onclick="location.reload()">Retry</button>
+					</div>
+				`;
+			}
+		}
+		
+		// Helper function to show error state for default stickers
+		function showDefaultStickerErrorState(stickerIndex, message) {
+			const stickerElement = document.querySelector(`[data-sticker-id="${stickerIndex}"]`);
+			if (!stickerElement) return;
+			
+			const previewArea = stickerElement.querySelector('.w-32.h-32');
+			if (previewArea) {
+				previewArea.innerHTML = `
+					<div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-100 to-pink-100 rounded-lg">
+						<div class="text-red-500 mb-2">
+							<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+							</svg>
+						</div>
+						<div class="text-xs text-red-600 font-medium text-center px-2">${message}</div>
+						<button class="mt-2 text-xs text-red-500 hover:text-red-700 underline" onclick="location.reload()">Retry</button>
+					</div>
+				`;
+			}
+		}
+		
+		
 		function openModal() {
 			if (modal) {
 				modal.classList.remove('hidden');
@@ -289,18 +574,148 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			}
 		}
 		
-		function handleSubmit(event) {
+		async function handleSubmit(event) {
 			event.preventDefault();
 			
 			const title = document.getElementById('stickerTitle')?.value;
 			const scenario = document.getElementById('stickerScenario')?.value;
 			const notes = document.getElementById('stickerNotes')?.value;
 			
-			// Here you would typically send this data to your backend
-			console.log('Adding sticker:', { title, scenario, notes });
+			if (!title || !scenario) {
+				// Show inline validation error
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-3 mb-4';
+				errorDiv.innerHTML = `
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+						</svg>
+						<span class="text-red-700 text-sm">Please fill in the required fields (Title and Scenario)</span>
+					</div>
+				`;
+				
+				// Insert error message at the top of the form
+				const form = document.getElementById('addStickerForm');
+				if (form) {
+					form.insertBefore(errorDiv, form.firstChild);
+					
+					// Remove error message after 3 seconds
+					setTimeout(() => {
+						if (errorDiv.parentNode) {
+							errorDiv.parentNode.removeChild(errorDiv);
+						}
+					}, 3000);
+				}
+				return;
+			}
 			
-			// For now, just close the modal
+			console.log('🎨 Generating new sticker:', { title, scenario, notes });
+			
+			// Create a temporary sticker with loading state
+			const tempStickerId = `temp-${Date.now()}`;
+			const tempSticker = {
+				id: tempStickerId,
+				name: title,
+				scenario: scenario,
+				description: `A sticker for: ${scenario}`,
+				notes: notes || '',
+				url: null, // Will be set when generation completes
+				isGenerating: true
+			};
+			
+			// Add to generated stickers array
+			generatedStickers.push(tempSticker);
+			
+			// Update the UI to show the new sticker with loading state
+			updateStickersDisplay();
+			
+			// Close modal immediately
 			closeModal();
+			
+			// Scroll to the new sticker
+			setTimeout(() => {
+				const newStickerElement = document.querySelector(`[data-sticker-id="${tempStickerId}"]`);
+				if (newStickerElement) {
+					newStickerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+			}, 100);
+			
+			try {
+				// Get centralized state for brand identity and avatar creation
+				const state = window.stickitGroupState || {};
+				const brandIdentity = state.input?.brandIdentity || {};
+				const avatarCreation = state.input?.avatarCreation || {};
+				
+				// Get group ID from URL params
+				const params = new URLSearchParams(window.location.search);
+				const groupId = params.get('groupId');
+				
+				// Prepare sticker data
+				const stickerData = {
+					name: title,
+					scenario: scenario,
+					description: `A sticker for: ${scenario}`,
+					notes: notes || ''
+				};
+				
+				// Prepare request payload
+				const payload = {
+					stickerData,
+					brandIdentity,
+					avatarCreation,
+					groupId
+				};
+				
+				console.log('🚀 Sending sticker generation request to API...');
+				
+				// Call the API
+				const response = await fetch(`${API_BASE}/generate-sticker`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					credentials: 'include',
+					body: JSON.stringify(payload)
+				});
+				
+				if (!response.ok) {
+					const errorData = await response.json();
+					console.error('❌ API request failed:', errorData);
+					throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+				}
+				
+				const result = await response.json();
+				console.log('✅ Sticker generation successful:', result.sticker);
+				
+				// Find and update the temporary sticker
+				const tempStickerIndex = generatedStickers.findIndex(s => s.id === tempStickerId);
+				if (tempStickerIndex !== -1) {
+					// Replace the temporary sticker with the real one
+					generatedStickers[tempStickerIndex] = result.sticker;
+					
+					// Simply refresh the entire display - this is more reliable
+					updateStickersDisplay();
+					
+					// Save to centralized state
+					saveStickersToState();
+					
+					// Show success feedback with a subtle animation
+					const container = document.getElementById('stickersContainer');
+					if (container) {
+						container.style.transform = 'scale(1.02)';
+						container.style.transition = 'transform 0.3s ease';
+						setTimeout(() => {
+							container.style.transform = 'scale(1)';
+						}, 300);
+					}
+				}
+				
+			} catch (error) {
+				console.error('❌ Sticker generation failed:', error);
+				
+				// Show error state in the sticker card
+				showStickerErrorState(tempStickerId, `Failed to generate: ${error.message}`);
+			}
 		}
 		
 		// Event listeners
@@ -351,27 +766,214 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			});
 		}
 
-		// Individual regenerate buttons
-		const regenerateButtons = document.querySelectorAll('.regenerate-sticker');
-		regenerateButtons.forEach(button => {
-			button.addEventListener('click', function() {
-				const stickerId = this.dataset.stickerId;
-				this.innerHTML = `
-					<svg class="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-					</svg>
-					Regenerating...
-				`;
+		// Function to handle sticker regeneration
+		async function regenerateSticker(stickerId, button) {
+			// Find the sticker to regenerate
+			const stickerIndex = generatedStickers.findIndex(s => s.id === stickerId);
+			if (stickerIndex === -1) {
+				console.error('Sticker not found for regeneration');
+				return;
+			}
+			
+			const existingSticker = generatedStickers[stickerIndex];
+			console.log('🔄 Regenerating sticker:', existingSticker.name);
+			
+			// Show loading state in the sticker preview area
+			showStickerLoadingState(stickerId, 'Regenerating sticker...');
+			
+			try {
+				// Get centralized state
+				const state = window.stickitGroupState || {};
+				const brandIdentity = state.input?.brandIdentity || {};
+				const avatarCreation = state.input?.avatarCreation || {};
 				
+				// Get group ID
+				const params = new URLSearchParams(window.location.search);
+				const groupId = params.get('groupId');
+				
+				// Prepare sticker data
+				const stickerData = {
+					name: existingSticker.name,
+					scenario: existingSticker.scenario,
+					description: existingSticker.description,
+					notes: existingSticker.notes
+				};
+				
+				// Prepare request payload
+				const payload = {
+					stickerData,
+					brandIdentity,
+					avatarCreation,
+					groupId
+				};
+				
+				console.log('🚀 Sending sticker regeneration request to API...');
+				
+				// Call the API
+				const response = await fetch(`${API_BASE}/generate-sticker`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					credentials: 'include',
+					body: JSON.stringify(payload)
+				});
+				
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+				}
+				
+				const result = await response.json();
+				console.log('✅ Sticker regeneration successful:', result.sticker);
+				
+				// Update the sticker in our array
+				generatedStickers[stickerIndex] = result.sticker;
+				console.log('📝 Updated generatedStickers array:', generatedStickers[stickerIndex]);
+				console.log('📝 Full generatedStickers array:', generatedStickers);
+				
+				// IMMEDIATELY update the UI - no complex functions
+				console.log('🎨 IMMEDIATELY updating UI...');
+				updateStickersDisplay();
+				console.log('✅ updateStickersDisplay() called');
+				
+				// Save to centralized state
+				saveStickersToState();
+				
+			} catch (error) {
+				console.error('❌ Sticker regeneration failed:', error);
+				showStickerErrorState(stickerId, `Failed to regenerate: ${error.message}`);
+			}
+		}
+		
+		// Function to handle default sticker generation
+		async function generateDefaultSticker(stickerIndex, button) {
+			// Default sticker data
+			const defaultStickers = [
+				{ 
+					name: 'Happy Response', 
+					scenario: 'When user is satisfied with the result',
+					description: 'Shows satisfaction and positive feedback',
+					notes: 'Default happy response sticker'
+				},
+				{ 
+					name: 'Surprised Reaction', 
+					scenario: 'When unexpected results occur',
+					description: 'Expresses surprise or amazement',
+					notes: 'Default surprised reaction sticker'
+				},
+				{ 
+					name: 'Celebration', 
+					scenario: 'When user achieves something',
+					description: 'Celebrates achievements and milestones',
+					notes: 'Default celebration sticker'
+				},
+				{ 
+					name: 'Helpful Assistant', 
+					scenario: 'When offering assistance',
+					description: 'Shows willingness to help',
+					notes: 'Default helpful assistant sticker'
+				}
+			];
+			
+			const stickerData = defaultStickers[stickerIndex];
+			console.log('🎨 Generating default sticker:', stickerData.name);
+			
+			// Show loading state in the sticker preview area
+			showDefaultStickerLoadingState(stickerIndex, `Generating ${stickerData.name}...`);
+			
+			try {
+				// Get centralized state
+				const state = window.stickitGroupState || {};
+				const brandIdentity = state.input?.brandIdentity || {};
+				const avatarCreation = state.input?.avatarCreation || {};
+				
+				// Get group ID
+				const params = new URLSearchParams(window.location.search);
+				const groupId = params.get('groupId');
+				
+				// Prepare request payload
+				const payload = {
+					stickerData,
+					brandIdentity,
+					avatarCreation,
+					groupId
+				};
+				
+				console.log('🚀 Sending default sticker generation request to API...');
+				
+				// Call the API
+				const response = await fetch(`${API_BASE}/generate-sticker`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					credentials: 'include',
+					body: JSON.stringify(payload)
+				});
+				
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+				}
+				
+				const result = await response.json();
+				console.log('✅ Default sticker generation successful:', result.sticker);
+				
+				// Add the generated sticker to our array
+				generatedStickers.push(result.sticker);
+				
+				// Update the UI with smooth transition
+				updateStickersDisplay();
+				
+				// Save to centralized state
+				saveStickersToState();
+				
+			} catch (error) {
+				console.error('❌ Default sticker generation failed:', error);
+				showDefaultStickerErrorState(stickerIndex, `Failed to generate: ${error.message}`);
+			}
+		}
+		
+		// Function to delete sticker
+		function deleteSticker(stickerId) {
+			const stickerIndex = generatedStickers.findIndex(s => s.id === stickerId);
+			if (stickerIndex !== -1) {
+				const deletedSticker = generatedStickers[stickerIndex];
+				
+				// Show loading state during deletion
+				showStickerLoadingState(stickerId, 'Deleting sticker...');
+				
+				// Simulate a brief delay for smooth UX
 				setTimeout(() => {
-					this.innerHTML = `
-						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-						</svg>
-						Regenerate
-					`;
-				}, 2000);
-			});
+					generatedStickers.splice(stickerIndex, 1);
+					
+					// Update the UI
+					updateStickersDisplay();
+					
+					// Save to centralized state
+					saveStickersToState();
+					
+					console.log('🗑️ Sticker deleted:', deletedSticker.name);
+				}, 500);
+			}
+		}
+		
+		// Event delegation for dynamic buttons
+		document.addEventListener('click', function(e) {
+			if (e.target.closest('.regenerate-sticker')) {
+				const button = e.target.closest('.regenerate-sticker');
+				const stickerId = button.dataset.stickerId;
+				regenerateSticker(stickerId, button);
+			} else if (e.target.closest('.generate-default-sticker')) {
+				const button = e.target.closest('.generate-default-sticker');
+				const stickerIndex = parseInt(button.dataset.stickerId);
+				generateDefaultSticker(stickerIndex, button);
+			} else if (e.target.closest('.delete-sticker')) {
+				const button = e.target.closest('.delete-sticker');
+				const stickerId = button.dataset.stickerId;
+				deleteSticker(stickerId);
+			}
 		});
 
 		// Preview in chat button
@@ -406,5 +1008,24 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				}));
 			});
 		}
+		
+		// Load stickers from centralized state
+		window.addEventListener('groupDataLoaded', () => {
+			const state = window.stickitGroupState || {};
+			const sg = state?.input?.stickerGeneration || {};
+			
+			if (Array.isArray(sg.stickers)) {
+				generatedStickers = sg.stickers;
+				console.log('🔄 Restored stickers from state:', generatedStickers.length, 'stickers');
+				updateStickersDisplay();
+			} else {
+				// Initialize with empty array and show default stickers
+				generatedStickers = [];
+				updateStickersDisplay();
+			}
+		});
+		
+		// Initialize display on page load
+		updateStickersDisplay();
 	});
 </script>
