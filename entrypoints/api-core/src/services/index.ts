@@ -2,4 +2,4 @@
  * Services exports
  */
 
-export { StickerService, type StickerGenerationResult, type StickerGenerationError } from './stickerService.js';
+export { StickerService } from './stickerService.js';
