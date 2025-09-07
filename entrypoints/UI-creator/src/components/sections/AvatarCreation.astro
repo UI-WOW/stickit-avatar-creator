@@ -13,8 +13,8 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 	</CardHeader>
 	<CardContent class="space-y-8">
 		<!-- Character Description -->
-		<div class="space-y-4">
-			<label class="text-sm font-medium text-gray-700">Describe your ideal avatar *</label>
+		<div class="space-y-4 mt-8">
+			<label class="text-sm font-medium text-black-700">Describe your ideal avatar *</label>
 			<p class="text-sm text-gray-500">Be creative! Describe what your AI assistant should look like and act like</p>
 			<textarea 
 				placeholder="e.g., A friendly tech-savvy sloth wearing glasses, or a professional robot with a warm smile, or a helpful wizard who loves solving problems..."
@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			>A friendly tech-savvy sloth wearing glasses and a blue hoodie, who loves helping people with technology and always has a warm, encouraging smile.</textarea>
 		</div>
 
-		<div class="grid md:grid-cols-2 gap-8">
+		<div class="grid md:grid-cols-2 gap-8 mt-8">
 			<!-- Upload Section -->
 			<div class="space-y-4">
 				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Optional)</h3>
@@ -43,7 +43,7 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			</div>
 			
 			<!-- Avatar Preview -->
-			<div class="space-y-4">
+			<div class="space-y-4 mt-8">
 				<h3 class="text-lg font-semibold text-gray-800">Avatar Preview</h3>
 				<div class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 text-center">
 					<div class="w-32 h-32 mx-auto bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4">
@@ -61,14 +61,47 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			</div>
 		</div>
 
+		<!-- Color Palette -->
+		<div class="space-y-4 mt-8">
+			<label class="text-sm font-medium text-black-700">Avatar Color Palette</label>
+			<p class="text-sm text-gray-500">Choose 4 colors for your avatar's visual design (optional)</p>
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="colorPalette">
+				{[
+					{ name: 'Primary', id: 'color1', value: '#3B82F6' },
+					{ name: 'Secondary', id: 'color2', value: '#8B5CF6' },
+					{ name: 'Accent', id: 'color3', value: '#10B981' },
+					{ name: 'Neutral', id: 'color4', value: '#6B7280' }
+				].map((color) => (
+					<div class="space-y-2">
+						<label class="text-xs font-medium text-gray-600">{color.name}</label>
+						<div class="flex items-center gap-2">
+							<input 
+								type="color" 
+								id={color.id}
+								value={color.value}
+								class="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
+							/>
+							<input 
+								type="text" 
+								value={color.value}
+								class="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none cursor-pointer hover:border-gray-300 transition-colors"
+								readonly
+								data-color-picker={color.id}
+							/>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+
 		<!-- Style Preferences -->
-		<div class="space-y-4">
-			<label class="text-sm font-medium text-gray-700">Sticker Style Preferences</label>
+		<div class="space-y-4 mt-8">
+			<label class="text-sm font-medium text-black-700">Sticker Style Preferences</label>
 			<p class="text-sm text-gray-500">Choose the visual style for your stickers, or skip if you've already specified it in your description</p>
 			<div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="styleSelection">
 				{[
-					{ name: 'No specific style', icon: '🎯', selected: false, description: 'Use description/image style' },
-					{ name: 'Cartoon', icon: '🎨', selected: true, description: 'Fun and playful' },
+					{ name: 'No specific style', icon: '🎯', selected: true, description: 'Use description/image style' },
+					{ name: 'Cartoon', icon: '🎨', selected: false, description: 'Fun and playful' },
 					{ name: 'Minimalist', icon: '⚪', selected: false, description: 'Clean and simple' },
 					{ name: 'Realistic', icon: '📸', selected: false, description: 'Detailed and lifelike' },
 					{ name: 'Abstract', icon: '🌀', selected: false, description: 'Creative and unique' }
@@ -119,6 +152,30 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', function() {
+		// Color picker synchronization
+		const colorPickers = document.querySelectorAll('input[type="color"]');
+		colorPickers.forEach(picker => {
+			picker.addEventListener('input', function() {
+				// Find the corresponding text input and update its value
+				const textInput = this.parentElement.querySelector('input[type="text"]');
+				if (textInput) {
+					textInput.value = this.value;
+				}
+			});
+		});
+
+		// Make hex code inputs clickable to open color picker
+		const hexInputs = document.querySelectorAll('input[data-color-picker]');
+		hexInputs.forEach(hexInput => {
+			hexInput.addEventListener('click', function() {
+				const colorPickerId = this.dataset.colorPicker;
+				const colorPicker = document.getElementById(colorPickerId);
+				if (colorPicker) {
+					colorPicker.click();
+				}
+			});
+		});
+
 		// Style selection
 		const styleButtons = document.querySelectorAll('[data-style]');
 		styleButtons.forEach(button => {
@@ -166,7 +223,13 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 				// Get form data
 				const formData = {
 					avatarDescription: document.getElementById('avatarDescription')?.value,
-					selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style
+					selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style,
+					colorPalette: {
+						primary: document.getElementById('color1')?.value,
+						secondary: document.getElementById('color2')?.value,
+						accent: document.getElementById('color3')?.value,
+						neutral: document.getElementById('color4')?.value
+					}
 				};
 				
 				// Store in session storage

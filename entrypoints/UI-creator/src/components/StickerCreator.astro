@@ -18,7 +18,7 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 						</svg>
 						<span class="text-white text-xs font-bold" id="step1-number">1</span>
 					</div>
-					<span class="text-sm font-medium text-gray-500 transition-colors duration-300" id="step1-label">Brand Identity</span>
+					<span class="text-sm font-medium text-gray-500 transition-colors duration-300" id="step1-label">Avatar Identity</span>
 				</div>
 				<div class="flex-1 h-0.5 bg-gray-300 mx-4 transition-colors duration-300" id="step1-line"></div>
 				<div class="flex items-center space-x-2 cursor-pointer" data-step="2">
@@ -94,7 +94,7 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 		
 		<!-- Mobile: Current Step Label -->
 		<div class="md:hidden text-center mb-2">
-			<span class="text-sm font-medium text-indigo-600" id="current-step-label">Brand Identity</span>
+			<span class="text-sm font-medium text-indigo-600" id="current-step-label">Avatar Identity</span>
 		</div>
 		
 		<div class="w-full bg-gray-200 rounded-full h-2">
@@ -103,7 +103,7 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 	</div>
 	<!-- Section Container -->
 	<div id="sections-container">
-		<!-- Step 1: Brand Identity -->
+		<!-- Step 1: Avatar Identity -->
 		<div id="section-1" class="section active">
 			<BrandIdentity />
 		</div>
@@ -153,7 +153,7 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 		window.addEventListener('stepCompleted', function(event) {
 			const { step, data } = event.detail;
 			
-			if (step === 'brandIdentity' && currentStep === 1) {
+			if (step === 'avatarIdentity' && currentStep === 1) {
 				currentStep = 2;
 				goToStep(2);
 			} else if (step === 'avatarCreation' && currentStep === 2) {
@@ -217,7 +217,7 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 			// Update mobile current step label
 			if (currentStepLabel) {
 				const stepLabels = {
-					1: 'Brand Identity',
+					1: 'Avatar Identity',
 					2: 'Avatar Design', 
 					3: 'Sticker Generation',
 					4: 'See It In Action'

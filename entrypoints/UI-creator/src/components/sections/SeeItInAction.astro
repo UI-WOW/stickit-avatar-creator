@@ -251,11 +251,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', function() {
 		// Load saved data and update assistant name
-		const brandData = JSON.parse(sessionStorage.getItem('brandIdentity') || '{}');
+		const avatarIdentityData = JSON.parse(sessionStorage.getItem('avatarIdentity') || '{}');
 		const avatarData = JSON.parse(sessionStorage.getItem('avatarCreation') || '{}');
 		
-		// Update assistant name based on brand data
-		const assistantName = brandData.businessName || 'Tech Assistant';
+		// Update assistant name based on avatar identity data
+		const assistantName = avatarIdentityData.collectionName || 'Tech Assistant';
 		document.getElementById('assistant-name').textContent = assistantName;
 		document.getElementById('assistant-name-mobile').textContent = assistantName;
 
@@ -393,7 +393,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				// Store completion data
 				sessionStorage.setItem('creationCompleted', JSON.stringify({
 					timestamp: new Date().toISOString(),
-					brandData,
+					avatarIdentityData,
 					avatarData
 				}));
 				

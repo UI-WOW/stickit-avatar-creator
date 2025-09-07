@@ -6,52 +6,52 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 	<CardHeader class="pb-4">
 		<div class="flex items-center space-x-3">
 			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
-			<h2 class="text-2xl font-bold text-gray-800">Brand Identity</h2>
+			<h2 class="text-2xl font-bold text-gray-800">Avatar Identity</h2>
 		</div>
-		<p class="text-gray-600 mt-2">Tell us about your brand so we can create stickers that truly represent your identity</p>
+		<p class="text-gray-600 mt-2">Define your avatar's personality so we can create stickers that truly represent your character</p>
 	</CardHeader>
 	<CardContent class="space-y-8">
 		<!-- Basic Information -->
 		<div class="grid md:grid-cols-2 gap-6">
 			<div class="space-y-2">
-				<label class="text-sm font-medium text-gray-700">Business Name *</label>
+				<label class="text-sm font-medium text-black-700">Collection Name *</label>
 				<input 
 					type="text" 
-					placeholder="e.g., TechCorp Inc." 
+					placeholder="e.g., My Tech Assistant" 
 					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
-					value="TechCorp Inc."
-					id="businessName"
+					value="My Tech Assistant"
+					id="collectionName"
 				/>
 			</div>
 			<div class="space-y-2">
-				<label class="text-sm font-medium text-gray-700">Industry *</label>
-				<select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300" id="industry">
-					<option>Technology</option>
-					<option>Healthcare</option>
-					<option>Finance</option>
-					<option>Education</option>
-					<option>Retail</option>
-					<option>E-commerce</option>
-					<option>Consulting</option>
+				<label class="text-sm font-medium text-black-700">Avatar Type *</label>
+				<select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300" id="avatarType">
+					<option>Assistant</option>
+					<option>Customer Support</option>
+					<option>Personal Helper</option>
+					<option>Educational Tutor</option>
+					<option>Entertainment Bot</option>
+					<option>Professional Guide</option>
+					<option>Creative Partner</option>
 					<option>Other</option>
 				</select>
 			</div>
 		</div>
 
-		<!-- Brand Description -->
-		<div class="space-y-2">
-			<label class="text-sm font-medium text-gray-700">What does your business do? *</label>
+		<!-- Avatar Description -->
+		<div class="space-y-2 mt-8">
+			<label class="text-sm font-medium text-black-700">What will your avatar help with? *</label>
 			<textarea 
-				placeholder="Describe your product or service in 2-3 sentences. This helps us understand your brand better..."
+				placeholder="Describe what your avatar will do and how it will help users. This helps us create the right personality and stickers..."
 				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
-				id="businessDescription"
-			>TechCorp Inc. develops innovative software solutions for small businesses, helping them streamline operations and increase productivity through cutting-edge technology.</textarea>
+				id="avatarDescription"
+			>My Tech Assistant helps users with technical questions, provides support, and makes technology more accessible through friendly conversations.</textarea>
 		</div>
 
-		<!-- Brand Personality -->
-		<div class="space-y-4">
-			<label class="text-sm font-medium text-gray-700">Brand Personality *</label>
-			<p class="text-sm text-gray-500">Select 3-5 traits that best describe your brand's personality</p>
+		<!-- Avatar Personality -->
+		<div class="space-y-4 mt-8">
+			<label class="text-sm font-medium text-black-700">Avatar Personality *</label>
+			<p class="text-sm text-gray-500">Select 3-5 traits that best describe your avatar's personality</p>
 			<div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="personalityTraits">
 				{[
 					{ name: 'Friendly', icon: '😊', selected: true },
@@ -78,43 +78,8 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			</div>
 		</div>
 
-		<!-- Preferred Colors -->
-		<div class="space-y-4">
-			<label class="text-sm font-medium text-gray-700">Preferred Colors</label>
-			<p class="text-sm text-gray-500">Choose colors that represent your brand (optional)</p>
-			<div class="flex flex-wrap gap-3" id="colorSelection">
-				{[
-					{ name: 'Blue', color: 'bg-blue-500', selected: true },
-					{ name: 'Purple', color: 'bg-purple-500', selected: true },
-					{ name: 'Green', color: 'bg-green-500', selected: false },
-					{ name: 'Orange', color: 'bg-orange-500', selected: false },
-					{ name: 'Red', color: 'bg-red-500', selected: false },
-					{ name: 'Pink', color: 'bg-pink-500', selected: false },
-					{ name: 'Yellow', color: 'bg-yellow-500', selected: false },
-					{ name: 'Gray', color: 'bg-gray-500', selected: false }
-				].map((color) => (
-					<button 
-						class={`w-12 h-12 rounded-full border-4 transition-all hover:scale-110 transform ${
-							color.selected ? 'border-gray-800 scale-110 shadow-lg' : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
-						} ${color.color}`} 
-						title={color.name}
-						data-color={color.name}
-					></button>
-				))}
-			</div>
-		</div>
 
-		<!-- Target Audience -->
-		<div class="space-y-2">
-			<label class="text-sm font-medium text-gray-700">Who will use these stickers?</label>
-			<input 
-				type="text" 
-				placeholder="e.g., Our customers, internal team, partners..."
-				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
-				value="Our customers and internal team"
-				id="targetAudience"
-			/>
-		</div>
+
 	</CardContent>
 </Card>
 
@@ -127,7 +92,7 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 		</svg>
-		Save Brand Identity
+		Save Avatar Identity
 	</button>
 </div>
 
@@ -151,16 +116,6 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			});
 		});
 
-		// Color selection
-		const colorButtons = document.querySelectorAll('[data-color]');
-		colorButtons.forEach(button => {
-			button.addEventListener('click', function() {
-				this.classList.toggle('border-gray-800');
-				this.classList.toggle('scale-110');
-				this.classList.toggle('shadow-lg');
-				this.classList.toggle('border-gray-200');
-			});
-		});
 
 		// Save button
 		const saveButton = document.getElementById('saveBrandIdentity');
@@ -168,20 +123,19 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 			saveButton.addEventListener('click', function() {
 				// Get form data
 				const formData = {
-					businessName: document.getElementById('businessName')?.value,
-					industry: document.getElementById('industry')?.value,
-					businessDescription: document.getElementById('businessDescription')?.value,
+					collectionName: document.getElementById('collectionName')?.value,
+					avatarType: document.getElementById('avatarType')?.value,
+					avatarDescription: document.getElementById('avatarDescription')?.value,
 					targetAudience: document.getElementById('targetAudience')?.value,
-					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait),
-					selectedColors: Array.from(document.querySelectorAll('[data-color].border-gray-800')).map(btn => btn.dataset.color)
+					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait)
 				};
 				
 				// Store in session storage
-				sessionStorage.setItem('brandIdentity', JSON.stringify(formData));
+				sessionStorage.setItem('avatarIdentity', JSON.stringify(formData));
 				
 				// Emit custom event to move to next step
 				window.dispatchEvent(new CustomEvent('stepCompleted', { 
-					detail: { step: 'brandIdentity', data: formData } 
+					detail: { step: 'avatarIdentity', data: formData } 
 				}));
 			});
 		}
