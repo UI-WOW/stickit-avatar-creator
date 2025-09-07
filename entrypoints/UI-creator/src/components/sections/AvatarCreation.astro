@@ -1,7 +1,7 @@
 ---
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
-const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 ---
 
 <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
@@ -28,26 +28,26 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		<div class="space-y-4 mt-8">
 			<label class="text-sm font-medium text-black-700">Avatar Color Palette</label>
 			<p class="text-sm text-gray-500">Choose 4 colors for your avatar's visual design (optional)</p>
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="colorPalette">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="colorPalette">
 				{[
 					{ name: 'Primary', id: 'color1', value: '#3B82F6' },
 					{ name: 'Secondary', id: 'color2', value: '#8B5CF6' },
 					{ name: 'Accent', id: 'color3', value: '#10B981' },
 					{ name: 'Neutral', id: 'color4', value: '#6B7280' }
 				].map((color) => (
-					<div class="space-y-2">
+					<div class="space-y-2 p-3  rounded-lg ">
 						<label class="text-xs font-medium text-gray-600">{color.name}</label>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-3">
 							<input 
 								type="color" 
 								id={color.id}
 								value={color.value}
-								class="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
+								class="w-14 h-14 rounded-lg border-2 border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
 							/>
 							<input 
 								type="text" 
 								value={color.value}
-								class="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none cursor-pointer hover:border-gray-300 transition-colors"
+								class="w-full px-3 py-2 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none cursor-pointer hover:border-gray-300 transition-colors"
 								readonly
 								data-color-picker={color.id}
 							/>
@@ -89,18 +89,37 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 			<!-- Upload Section -->
 			<div class="space-y-4">
 				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Optional)</h3>
-				<p class="text-sm text-gray-500">Upload images that inspire your avatar design</p>
+				<p class="text-sm text-gray-500">Upload up to 3 images that inspire your avatar design</p>
+				
+				<!-- Upload Area -->
 				<div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-300 cursor-pointer group" id="uploadArea">
 					<svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:text-indigo-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
 					</svg>
 					<p class="text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors duration-300">Drag & drop images here</p>
 					<p class="text-sm text-gray-500 group-hover:text-indigo-500 transition-colors duration-300">or click to browse</p>
+					<input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png,image/svg+xml" multiple class="hidden" />
 				</div>
+				
+				<!-- Uploaded Images Preview -->
+				<div id="uploadedImages" class="space-y-3 hidden">
+					<h4 class="text-sm font-medium text-gray-700">Uploaded Images</h4>
+					<div id="imageList" class="space-y-2"></div>
+				</div>
+				
+				<!-- Upload Progress -->
+				<div id="uploadProgress" class="hidden">
+					<div class="bg-gray-200 rounded-full h-2">
+						<div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+					</div>
+					<p id="progressText" class="text-sm text-gray-600 mt-1">Uploading...</p>
+				</div>
+				
 				<div class="text-sm text-gray-500">
 					<p>• Character references, mascots, or style inspiration</p>
 					<p>• Supported formats: JPG, PNG, SVG</p>
 					<p>• Max file size: 10MB per image</p>
+					<p>• Maximum 3 images allowed</p>
 				</div>
 			</div>
 			
@@ -151,6 +170,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		Back to Brand Identity
 	</button>
 </div>
+
+<div id="env-avatar" data-api-base={API_BASE} class="hidden"></div>
 
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', function() {
@@ -231,14 +252,16 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 						secondary: document.getElementById('color2')?.value,
 						accent: document.getElementById('color3')?.value,
 						neutral: document.getElementById('color4')?.value
-					}
+					},
+					referenceImages: uploadedImages
 				};
 				// Update centralized state and request unified save
 				window.dispatchEvent(new CustomEvent('sectionDataUpdated', { detail: {
 					avatarCreation: {
 						description: formData.avatarDescription,
 						selectedStyle: formData.selectedStyle,
-						colorPalette: formData.colorPalette
+						colorPalette: formData.colorPalette,
+						referenceImages: formData.referenceImages
 					}
 				}}));
 				window.dispatchEvent(new CustomEvent('requestSave'));
@@ -263,6 +286,203 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				}));
 			});
 		}
+
+		// Reference Images functionality
+		let uploadedImages = [];
+		const MAX_IMAGES = 3;
+		const API_BASE = 'http://localhost:8002';
+
+		// File upload handling
+		const uploadArea = document.getElementById('uploadArea');
+		const fileInput = document.getElementById('fileInput');
+		const uploadedImagesContainer = document.getElementById('uploadedImages');
+		const imageList = document.getElementById('imageList');
+		const uploadProgress = document.getElementById('uploadProgress');
+		const progressBar = document.getElementById('progressBar');
+		const progressText = document.getElementById('progressText');
+
+		// Click to upload
+		uploadArea.addEventListener('click', () => {
+			if (uploadedImages.length < MAX_IMAGES) {
+				fileInput.click();
+			}
+		});
+
+		// Drag and drop
+		uploadArea.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			uploadArea.classList.add('border-indigo-500', 'bg-indigo-50');
+		});
+
+		uploadArea.addEventListener('dragleave', (e) => {
+			e.preventDefault();
+			uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+		});
+
+		uploadArea.addEventListener('drop', (e) => {
+			e.preventDefault();
+			uploadArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+			
+			const files = Array.from(e.dataTransfer.files);
+			handleFiles(files);
+		});
+
+		// File input change
+		fileInput.addEventListener('change', (e) => {
+			const files = Array.from(e.target.files);
+			handleFiles(files);
+		});
+
+		async function handleFiles(files) {
+			const remainingSlots = MAX_IMAGES - uploadedImages.length;
+			const filesToProcess = files.slice(0, remainingSlots);
+
+			if (filesToProcess.length === 0) {
+				alert(`You can only upload up to ${MAX_IMAGES} images.`);
+				return;
+			}
+
+			for (const file of filesToProcess) {
+				await uploadImage(file);
+			}
+		}
+
+		async function uploadImage(file) {
+			// Validate file
+			const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
+			if (!allowedTypes.includes(file.type)) {
+				alert('Invalid file type. Only JPG, PNG, and SVG are allowed.');
+				return;
+			}
+
+			if (file.size > 10 * 1024 * 1024) {
+				alert('File too large. Maximum size is 10MB.');
+				return;
+			}
+
+			// Show progress
+			uploadProgress.classList.remove('hidden');
+			progressText.textContent = `Uploading ${file.name}...`;
+
+			try {
+				const formData = new FormData();
+				formData.append('image', file);
+
+				const uploadUrl = `${API_BASE}/reference-images`;
+				console.log('Uploading to:', uploadUrl);
+				console.log('API_BASE:', API_BASE);
+
+				const response = await fetch(uploadUrl, {
+					method: 'POST',
+					body: formData,
+					credentials: 'include'
+				});
+
+				console.log('Response status:', response.status);
+				console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+				if (!response.ok) {
+					const responseText = await response.text();
+					console.log('Error response text:', responseText);
+					
+					try {
+						const error = JSON.parse(responseText);
+						throw new Error(error.error || 'Upload failed');
+					} catch (parseError) {
+						throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+					}
+				}
+
+				const result = await response.json();
+				
+				// Add to uploaded images
+				uploadedImages.push({
+					filename: result.filename,
+					url: result.url,
+					name: file.name,
+					size: file.size,
+					type: file.type
+				});
+
+				// Update UI
+				updateImageList();
+				updateUploadArea();
+
+			} catch (error) {
+				console.error('Upload error:', error);
+				alert(`Upload failed: ${error.message}`);
+			} finally {
+				uploadProgress.classList.add('hidden');
+			}
+		}
+
+		function updateImageList() {
+			if (uploadedImages.length === 0) {
+				uploadedImagesContainer.classList.add('hidden');
+				return;
+			}
+
+			uploadedImagesContainer.classList.remove('hidden');
+			imageList.innerHTML = '';
+
+			uploadedImages.forEach((image, index) => {
+				const imageItem = document.createElement('div');
+				imageItem.className = 'flex items-center gap-3 p-3 bg-gray-50 rounded-lg';
+				imageItem.innerHTML = `
+					<img src="${image.url}" alt="${image.name}" class="w-12 h-12 object-cover rounded-lg" />
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-medium text-gray-900 truncate">${image.name}</p>
+						<p class="text-xs text-gray-500">${(image.size / 1024 / 1024).toFixed(1)} MB</p>
+					</div>
+					<button type="button" class="text-red-500 hover:text-red-700 p-1" onclick="removeImage(${index})">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+						</svg>
+					</button>
+				`;
+				imageList.appendChild(imageItem);
+			});
+		}
+
+		function updateUploadArea() {
+			if (uploadedImages.length >= MAX_IMAGES) {
+				uploadArea.classList.add('opacity-50', 'cursor-not-allowed');
+				uploadArea.querySelector('p').textContent = 'Maximum 3 images uploaded';
+			} else {
+				uploadArea.classList.remove('opacity-50', 'cursor-not-allowed');
+				uploadArea.querySelector('p').textContent = 'Drag & drop images here';
+			}
+		}
+
+		async function removeImage(index) {
+			const image = uploadedImages[index];
+			
+			try {
+				// Delete from server
+				const response = await fetch(`${API_BASE}/reference-images?filePath=${encodeURIComponent(image.filename)}`, {
+					method: 'DELETE',
+					credentials: 'include'
+				});
+
+				if (!response.ok) {
+					throw new Error('Failed to delete image from server');
+				}
+
+				// Remove from local array
+				uploadedImages.splice(index, 1);
+				
+				// Update UI
+				updateImageList();
+				updateUploadArea();
+
+			} catch (error) {
+				console.error('Delete error:', error);
+				alert(`Failed to delete image: ${error.message}`);
+			}
+		}
+
+		// Make removeImage globally available
+		window.removeImage = removeImage;
 
 		// Populate from centralized state after StickerCreator load
 		window.addEventListener('groupDataLoaded', () => {
@@ -292,6 +512,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 			if (color2 instanceof HTMLInputElement && typeof palette.secondary === 'string') color2.value = palette.secondary;
 			if (color3 instanceof HTMLInputElement && typeof palette.accent === 'string') color3.value = palette.accent;
 			if (color4 instanceof HTMLInputElement && typeof palette.neutral === 'string') color4.value = palette.neutral;
+			
+			// Load reference images if they exist
+			if (Array.isArray(ac.referenceImages)) {
+				uploadedImages = ac.referenceImages;
+				updateImageList();
+				updateUploadArea();
+			}
 		});
 	});
 </script>

@@ -176,11 +176,20 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		window.addEventListener('requestSave', () => { unifiedSave(); });
 
 		async function loadGroupIfNeeded() {
-			if (!groupId) { showSections(); return; }
+			if (!groupId) { 
+				showSections(); 
+				// Still check for hash navigation even without groupId
+				checkHashNavigation();
+				return; 
+			}
 			try {
 				hideSections();
 				const res = await fetch(`${apiBase}/sticker-groups/${groupId}`, { credentials: 'include' });
-				if (!res.ok) { showSections(); return; }
+				if (!res.ok) { 
+					showSections(); 
+					checkHashNavigation();
+					return; 
+				}
 				const data = await res.json();
 				window.stickitGroupState.name = data?.name || '';
 				window.stickitGroupState.input = { brandIdentity: {}, avatarCreation: {}, stickerGeneration: {}, ...(data?.input || {}) };
@@ -189,20 +198,31 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				console.error('Failed to load group', e);
 			} finally {
 				showSections();
+				// Check hash navigation after data is loaded and sections are shown
+				checkHashNavigation();
 			}
 		}
+
+		function checkHashNavigation() {
+			const hash = window.location.hash;
+			const hashToStepMap = {
+				'#avatar-identity': 1,
+				'#avatar-design': 2,
+				'#sticker-generation': 3,
+				'#see-it-in-action': 4
+			};
+			
+			if (hash && hashToStepMap[hash]) {
+				// Navigate directly to the section specified in the hash
+				currentStep = hashToStepMap[hash];
+				goToStep(currentStep);
+			}
+		}
+
 		loadGroupIfNeeded();
 
 		// Initialize progress
 		updateProgress();
-
-		// Check for URL hash navigation
-		const hash = window.location.hash;
-		if (hash === '#see-it-in-action') {
-			// Navigate directly to the See It In Action section (step 4)
-			currentStep = 4;
-			goToStep(4);
-		}
 
 		// Step navigation
 		document.querySelectorAll('[data-step]').forEach(step => {
@@ -263,6 +283,16 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 
 			currentStep = stepNumber;
 			updateProgress();
+			
+			// Update URL hash to reflect current section
+			const sectionNames = {
+				1: 'avatar-identity',
+				2: 'avatar-design',
+				3: 'sticker-generation',
+				4: 'see-it-in-action'
+			};
+			const hash = sectionNames[stepNumber] || 'avatar-identity';
+			window.history.replaceState(null, null, `#${hash}`);
 			
 			// Scroll to top of the page
 			window.scrollTo({ top: 0, behavior: 'smooth' });
