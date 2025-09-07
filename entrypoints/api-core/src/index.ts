@@ -2,7 +2,8 @@ import { Hono } from 'hono'
 import { Bindings } from './bindings.js'
 import { createRequestLoggerMiddleware } from './middleware/requestLogger.js'
 import { GoogleGenAI } from "@google/genai";
-import { StickerService } from './services/index.js';
+import { StickerService, KvService } from './services/index.js';
+import { cors } from 'hono/cors'
 
 export type Variables = {
   gemini: GoogleGenAI
@@ -11,6 +12,21 @@ export type Variables = {
 export type honoContext = { Bindings: Bindings, Variables: Variables }
 
 const app = new Hono<honoContext>()
+
+// CORS for UI dev server and production
+const allowedOrigins = [
+  'http://localhost:8001',
+]
+
+app.use('*', cors({
+  origin: (origin) => {
+    if (!origin) return 'http://localhost:8001'
+    return allowedOrigins.includes(origin) ? origin : 'http://localhost:8001'
+  },
+  credentials: true,
+  allowMethods: ['GET','POST','OPTIONS'],
+  allowHeaders: ['Content-Type']
+}))
 
 // Middleware to log all requests
 app.use('*', async (c, next) => {
@@ -44,6 +60,48 @@ app.onError((err, c) => {
 // Health check
 app.get('/', (c) => {
   return c.text('Hello from the STICKIT AVATAR CREATOR App from Stickit')
+})
+
+// Simple KV-backed user collections and configs using session cookie as user id
+function getUserIdFromCookie(c: any): string | null {
+  const cookieHeader = c.req.header('cookie') || ''
+  const match = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+app.get('/collections', async (c) => {
+  const userId = getUserIdFromCookie(c)
+  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const items = await KvService.listCollections(c.env.APP_KV, userId)
+  return c.json({ items })
+})
+
+app.post('/collections', async (c) => {
+  const userId = getUserIdFromCookie(c)
+  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const body = await c.req.json().catch(() => ({}))
+  const name = body?.name || 'Untitled'
+  const item = await KvService.addCollection(c.env.APP_KV, userId, name)
+  return c.json(item, 201)
+})
+
+app.get('/collections/:id/configs', async (c) => {
+  const userId = getUserIdFromCookie(c)
+  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const collectionId = c.req.param('id')
+  const items = await KvService.listConfigs(c.env.APP_KV, userId, collectionId)
+  return c.json({ items })
+})
+
+app.post('/collections/:id/configs', async (c) => {
+  const userId = getUserIdFromCookie(c)
+  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const collectionId = c.req.param('id')
+  const body = await c.req.json().catch(() => ({}))
+  const input = body?.input ?? {}
+  const imageUrls = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
+  const item = await KvService.addConfig(c.env.APP_KV, userId, collectionId, input, imageUrls)
+  return c.json(item, 201)
 })
 
 // Route to generate and save an image using Gemini 2.5 Flash Image

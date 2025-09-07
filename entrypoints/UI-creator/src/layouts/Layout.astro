@@ -1,5 +1,22 @@
 ---
 import "../styles/global.css";
+// Ensure a simple device-scoped session cookie exists for the user
+const SESSION_COOKIE_NAME = "sticket-sid";
+const existingSession = Astro.cookies.get(SESSION_COOKIE_NAME)?.value;
+
+if (!existingSession) {
+    const generatedId = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) as string;
+    const oneYearSeconds = 60 * 60 * 24 * 365;
+    const isHttps = Astro.url?.protocol === "https:";
+
+    Astro.cookies.set(SESSION_COOKIE_NAME, generatedId, {
+        path: "/",
+        httpOnly: true,
+        secure: isHttps,
+        sameSite: "lax",
+        maxAge: oneYearSeconds,
+    });
+}
 ---
 
 <!doctype html>

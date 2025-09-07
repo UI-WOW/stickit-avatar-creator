@@ -14,7 +14,10 @@
     }
   ],
   "kv_namespaces": [
-
+    {
+      "binding": "APP_KV",
+      "id": "stickit-avatar-creator-kv"
+    }
   ],
 
   "observability": {

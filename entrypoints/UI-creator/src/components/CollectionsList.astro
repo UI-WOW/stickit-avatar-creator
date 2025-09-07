@@ -1,0 +1,90 @@
+---
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+---
+
+<div id="collections-root" class="space-y-6">
+    <div class="text-center text-gray-500" id="collections-loading">Loading your collections...</div>
+</div>
+
+<script>
+    const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+    const root = document.getElementById('collections-root');
+    const loading = document.getElementById('collections-loading');
+
+    async function loadCollections() {
+        if (!root) return;
+        try {
+            const url = `${API_BASE}/collections`;
+            const res = await fetch(url, { credentials: 'include' });
+            if (!res.ok) {
+                throw new Error(`Request failed (${res.status})`);
+            }
+            const data = await res.json();
+            const items = Array.isArray(data?.items) ? data.items : [];
+
+            if (loading) loading.remove();
+
+            if (items.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center text-gray-500';
+                empty.textContent = 'No collections yet. Create your first collection to get started!';
+                root.appendChild(empty);
+                return;
+            }
+
+            const list = document.createElement('div');
+            list.className = 'grid grid-cols-1 gap-4';
+
+            for (const col of items) {
+                const card = document.createElement('div');
+                card.className = 'rounded-lg border bg-white p-4 shadow-sm flex items-center justify-between';
+
+                const title = document.createElement('div');
+                title.className = 'text-lg font-semibold text-gray-800';
+                title.textContent = col.name || 'Untitled';
+
+                const meta = document.createElement('div');
+                meta.className = 'text-sm text-gray-500 mt-1';
+                meta.textContent = new Date(col.createdAt || Date.now()).toLocaleString();
+
+                const left = document.createElement('div');
+                left.appendChild(title);
+                left.appendChild(meta);
+
+                const del = document.createElement('button');
+                del.className = 'text-red-600 hover:text-red-700 text-sm';
+                del.textContent = 'Delete';
+                del.addEventListener('click', async () => {
+                    if (!confirm('Delete this collection?')) return;
+                    try {
+                        const r = await fetch(`${API_BASE}/collections/${col.id}`, { method: 'DELETE', credentials: 'include' });
+                        if (!r.ok) throw new Error('Delete failed');
+                        location.reload();
+                    } catch (e) {
+                        alert('Failed to delete');
+                        console.error(e);
+                    }
+                });
+
+                card.appendChild(left);
+                card.appendChild(del);
+                list.appendChild(card);
+            }
+
+            root.appendChild(list);
+        } catch (err) {
+            if (loading) loading.remove();
+            if (root) {
+                const e = document.createElement('div');
+                e.className = 'text-center text-red-600';
+                e.textContent = 'Failed to load collections.';
+                root.appendChild(e);
+            }
+            console.error(err);
+        }
+    }
+
+    loadCollections();
+</script>
+
+
