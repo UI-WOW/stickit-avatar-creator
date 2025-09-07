@@ -24,44 +24,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 			></textarea>
 		</div>
 
-		<div class="grid md:grid-cols-2 gap-8 mt-8">
-			<!-- Upload Section -->
-			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Optional)</h3>
-				<p class="text-sm text-gray-500">Upload images that inspire your avatar design</p>
-				<div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-300 cursor-pointer group" id="uploadArea">
-					<svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:text-indigo-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-					</svg>
-					<p class="text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors duration-300">Drag & drop images here</p>
-					<p class="text-sm text-gray-500 group-hover:text-indigo-500 transition-colors duration-300">or click to browse</p>
-				</div>
-				<div class="text-sm text-gray-500">
-					<p>• Character references, mascots, or style inspiration</p>
-					<p>• Supported formats: JPG, PNG, SVG</p>
-					<p>• Max file size: 10MB per image</p>
-				</div>
-			</div>
-			
-			<!-- Avatar Preview -->
-			<div class="space-y-4 mt-8">
-				<h3 class="text-lg font-semibold text-gray-800">Avatar Preview</h3>
-				<div class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 text-center">
-					<div class="w-32 h-32 mx-auto bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4">
-						<img src="/dummy-sticker.webp" alt="Generated Avatar" class="w-24 h-24 rounded-xl" />
-					</div>
-					<p class="text-sm text-gray-600 mb-2">Your AI assistant avatar</p>
-					<p class="text-xs text-gray-500">Based on your description and brand</p>
-					<Button variant="outline" size="sm" className="mt-3" id="regenerateAvatar">
-						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-						</svg>
-						Regenerate Avatar
-					</Button>
-				</div>
-			</div>
-		</div>
-
 		<!-- Color Palette -->
 		<div class="space-y-4 mt-8">
 			<label class="text-sm font-medium text-black-700">Avatar Color Palette</label>
@@ -122,13 +84,52 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				))}
 			</div>
 		</div>
+
+		<div class="grid md:grid-cols-2 gap-8 mt-8">
+			<!-- Upload Section -->
+			<div class="space-y-4">
+				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Optional)</h3>
+				<p class="text-sm text-gray-500">Upload images that inspire your avatar design</p>
+				<div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-300 cursor-pointer group" id="uploadArea">
+					<svg class="w-12 h-12 text-gray-400 mx-auto mb-4 group-hover:text-indigo-500 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+					</svg>
+					<p class="text-gray-600 mb-2 group-hover:text-indigo-600 transition-colors duration-300">Drag & drop images here</p>
+					<p class="text-sm text-gray-500 group-hover:text-indigo-500 transition-colors duration-300">or click to browse</p>
+				</div>
+				<div class="text-sm text-gray-500">
+					<p>• Character references, mascots, or style inspiration</p>
+					<p>• Supported formats: JPG, PNG, SVG</p>
+					<p>• Max file size: 10MB per image</p>
+				</div>
+			</div>
+			
+			<!-- Avatar Preview -->
+			<div class="space-y-4 mt-8">
+				<h3 class="text-lg font-semibold text-gray-800">Avatar Preview</h3>
+				<div class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 text-center">
+					<div class="w-32 h-32 mx-auto bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4">
+						<img src="/dummy-sticker.webp" alt="Generated Avatar" class="w-24 h-24 rounded-xl" />
+					</div>
+					<p class="text-sm text-gray-600 mb-2">Your AI assistant avatar</p>
+					<p class="text-xs text-gray-500">Based on your description and brand</p>
+					<Button variant="outline" size="sm" className="mt-3" id="regenerateAvatar">
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+						</svg>
+						Regenerate Avatar
+					</Button>
+				</div>
+			</div>
+		</div>
+
 	</CardContent>
 </Card>
 
 <!-- Save Button Outside Card -->
 <div class="flex justify-end mt-6">
 	<button 
-		class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
+		class="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
 		id="saveAvatarDesign"
 	>
 		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +142,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 <!-- Go Back Button -->
 <div class="flex justify-center mt-4">
 	<button 
-		class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+		class=" cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
 		id="goBackAvatarCreation"
 	>
 		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,7 +210,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				setTimeout(() => {
 					this.innerHTML = `
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 						</svg>
 						Regenerate Avatar
 					`;
