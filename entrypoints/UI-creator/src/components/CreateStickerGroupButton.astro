@@ -32,27 +32,28 @@ import { Button } from '@/components/ui/button';
   const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
   const btn = document.getElementById('create-group');
   const modal = document.getElementById('create-modal');
-  const input = document.getElementById('collection-name') as HTMLInputElement | null;
+  const input = document.getElementById('collection-name');
   const cancelBtn = document.getElementById('cancel-create');
   const confirmBtn = document.getElementById('confirm-create');
 
   function openModal() {
     modal?.classList.remove('hidden');
     modal?.classList.add('flex');
-    setTimeout(() => input?.focus(), 0);
+    setTimeout(() => { if (input instanceof HTMLInputElement) input.focus(); }, 0);
   }
   function closeModal() {
     modal?.classList.add('hidden');
     modal?.classList.remove('flex');
-    if (input) input.value = '';
+    if (input instanceof HTMLInputElement) input.value = '';
   }
 
   btn?.addEventListener('click', () => openModal());
   cancelBtn?.addEventListener('click', () => closeModal());
   modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
   confirmBtn?.addEventListener('click', async () => {
-    const name = input ? input.value.trim() : '';
+    const name = input instanceof HTMLInputElement ? input.value.trim() : '';
     try {
+      // 1) Create the group
       const res = await fetch(`${API_BASE}/sticker-groups`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +64,45 @@ import { Button } from '@/components/ui/button';
         const t = await res.text().catch(() => '');
         throw new Error(`Failed to create: ${res.status} ${t}`);
       }
+      const created = await res.json();
+
+      // 2) Initialize with dummy starter data (single unified payload)
+      if (created?.id) {
+        const starter = {
+          name: created.name || (name || 'Untitled'),
+          input: {
+            brandIdentity: {
+              avatarType: 'Assistant',
+              avatarDescription: 'Describe what your assistant helps with…',
+              personalityTraits: ['Friendly', 'Helpful']
+            },
+            avatarCreation: {
+              description: 'Describe your ideal avatar look and vibe…',
+              selectedStyle: 'No specific style',
+              colorPalette: {
+                primary: '#4F46E5',
+                secondary: '#7C3AED',
+                accent: '#EC4899',
+                neutral: '#475569'
+              }
+            },
+            stickerGeneration: {}
+          }
+        };
+        await fetch(`${API_BASE}/sticker-groups/${created.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(starter)
+        }).catch(() => {});
+      }
+
       closeModal();
+      if (created?.id) {
+        window.location.href = `/create?groupId=${encodeURIComponent(created.id)}`;
+        return;
+      }
+      // Fallback to reload if id missing
       location.reload();
     } catch (e) {
       console.error('Create group error', e);
