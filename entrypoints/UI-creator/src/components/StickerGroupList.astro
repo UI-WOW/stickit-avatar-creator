@@ -146,6 +146,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                         }
                         
                         stickersData = JSON.stringify(stickers);
+                    }
                 } catch (err) {
                     console.error('❌ Error fetching group data for:', col.id, err);
                 }
@@ -207,6 +208,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                                 `;
                             }
                         }
+                    } catch (e) {
+                        // Handle parsing errors silently
+                    }
                     
                     list.appendChild(cardEl);
                 }
