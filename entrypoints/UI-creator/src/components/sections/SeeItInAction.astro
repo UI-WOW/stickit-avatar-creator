@@ -97,11 +97,11 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 <!-- Action Buttons Outside Card -->
 <div class="flex justify-between items-center mt-6">
 	<div class="flex gap-3">
-		<Button variant="outline" className="px-6 py-3">
+		<Button variant="outline" className="px-6 py-3" id="downloadStickerGroup">
 			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
 			</svg>
-			Download Collection
+			Download Sticker Group
 		</Button>
 		<Button variant="outline" className="px-6 py-3">
 			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,194 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 </div>
 
 <script is:inline>
-	// Simple script to handle the go back button
+	// Load JSZip library for ZIP creation
+	let JSZip;
+	if (typeof window !== 'undefined') {
+		const script = document.createElement('script');
+		script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+		script.onload = () => {
+			JSZip = window.JSZip;
+			console.log('✅ JSZip library loaded for SeeItInAction');
+		};
+		document.head.appendChild(script);
+	}
+
+	// Function to download all stickers for the current group
+	async function downloadStickerGroup() {
+		console.log('🔧 downloadStickerGroup called');
+		
+		const downloadButton = document.getElementById('downloadStickerGroup');
+		if (!downloadButton) {
+			console.error('Download button not found');
+			return;
+		}
+		
+		const originalContent = downloadButton.innerHTML;
+		
+		try {
+			// Try to get stickers from the ChatInterface component
+			downloadButton.innerHTML = `
+				<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+				</svg>
+				Loading stickers...
+			`;
+			downloadButton.disabled = true;
+			
+			// Look for the ChatInterface component and get its stickers
+			let stickers = [];
+			let groupName = 'sticker-group';
+			
+			// Try to find stickers from the ChatInterface component
+			const chatInterface = document.querySelector('[data-reactroot]') || document.querySelector('div[class*="chat"]');
+			if (chatInterface) {
+				console.log('🔍 Found chat interface, looking for stickers...');
+				
+				// Try to access React component state (this is a bit hacky but should work)
+				const reactFiber = chatInterface._reactInternalFiber || chatInterface._reactInternalInstance;
+				if (reactFiber) {
+					console.log('🔍 Found React fiber, searching for stickers...');
+					// This is a simplified approach - in practice, we might need to use a different method
+				}
+			}
+			
+			// Fallback: Try to get stickers from the page context or global variables
+			if (window.stickerData) {
+				stickers = window.stickerData;
+				console.log('🔍 Found stickers in window.stickerData:', stickers);
+			} else if (window.availableStickers) {
+				stickers = window.availableStickers;
+				console.log('🔍 Found stickers in window.availableStickers:', stickers);
+			} else {
+				// Try to find stickers in the DOM
+				const stickerImages = document.querySelectorAll('img[src*="get-avatar-image"]');
+				console.log('🔍 Found sticker images in DOM:', stickerImages.length);
+				
+				if (stickerImages.length > 0) {
+					// Create a map to deduplicate by URL
+					const uniqueStickers = new Map();
+					
+					Array.from(stickerImages).forEach((img, index) => {
+						const url = img.src;
+						if (!uniqueStickers.has(url)) {
+							// Extract sticker name from URL or use a default
+							const urlParts = url.split('/');
+							const filename = urlParts[urlParts.length - 1];
+							const nameMatch = filename.match(/sticker-.*?-(.+?)\.png/);
+							const stickerName = nameMatch ? nameMatch[1] : `Sticker ${index + 1}`;
+							
+							uniqueStickers.set(url, {
+								id: `sticker-${index}`,
+								name: stickerName,
+								url: url
+							});
+						}
+					});
+					
+					stickers = Array.from(uniqueStickers.values());
+					console.log('🔍 Created unique stickers from DOM images:', stickers);
+					console.log('🔍 Deduplicated from', stickerImages.length, 'to', stickers.length, 'stickers');
+				}
+			}
+			
+			if (stickers.length === 0) {
+				alert('No stickers found. Please make sure the chat interface has loaded the stickers first.');
+				downloadButton.innerHTML = originalContent;
+				downloadButton.disabled = false;
+				return;
+			}
+			
+			if (!JSZip) {
+				alert('ZIP library not loaded yet. Please wait a moment and try again.');
+				downloadButton.innerHTML = originalContent;
+				downloadButton.disabled = false;
+				return;
+			}
+			
+			// Create ZIP
+			downloadButton.innerHTML = `
+				<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+				</svg>
+				Creating ZIP...
+			`;
+			
+			const zip = new JSZip();
+			let downloadCount = 0;
+			
+			// Add each sticker to the ZIP
+			for (const sticker of stickers) {
+				const stickerUrl = sticker.url || sticker.imageUrl;
+				if (!stickerUrl) continue;
+				
+				try {
+					const response = await fetch(stickerUrl);
+					if (!response.ok) continue;
+					
+					const blob = await response.blob();
+					const fileName = `${(sticker.name || 'sticker').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+					
+					zip.file(fileName, blob);
+					downloadCount++;
+					
+					// Update progress
+					downloadButton.innerHTML = `
+						<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+						</svg>
+						Adding ${downloadCount}/${stickers.length}...
+					`;
+				} catch (error) {
+					console.error('Failed to add sticker to ZIP:', sticker.name, error);
+				}
+			}
+			
+			if (downloadCount === 0) {
+				alert('No valid stickers found to download');
+				downloadButton.innerHTML = originalContent;
+				downloadButton.disabled = false;
+				return;
+			}
+			
+			// Generate and download ZIP
+			downloadButton.innerHTML = `
+				<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+				</svg>
+				Downloading...
+			`;
+			
+			const zipBlob = await zip.generateAsync({ type: 'blob' });
+			
+			// Download the ZIP
+			const url = window.URL.createObjectURL(zipBlob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `${groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-stickers-${new Date().toISOString().split('T')[0]}.zip`;
+			
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			
+			// Clean up
+			window.URL.revokeObjectURL(url);
+			
+			// Reset button
+			downloadButton.innerHTML = originalContent;
+			downloadButton.disabled = false;
+			
+			console.log(`✅ Downloaded ${downloadCount} stickers as ZIP`);
+		} catch (error) {
+			console.error('❌ Failed to download sticker group:', error);
+			alert(`Failed to download sticker group: ${error.message}`);
+			
+			// Reset button
+			downloadButton.innerHTML = originalContent;
+			downloadButton.disabled = false;
+		}
+	}
+
+	// Simple script to handle the go back button and download button
 	document.addEventListener('DOMContentLoaded', function() {
 		const goBackButton = document.getElementById('goBackSeeItInAction');
 		if (goBackButton) {
@@ -136,6 +323,11 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 					detail: { fromStep: 'seeItInAction' } 
 				}));
 			});
+		}
+		
+		const downloadButton = document.getElementById('downloadStickerGroup');
+		if (downloadButton) {
+			downloadButton.addEventListener('click', downloadStickerGroup);
 		}
 	});
 </script>
