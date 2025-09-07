@@ -8,15 +8,16 @@ interface Props {
   id?: string;
   createdAt?: string | number;
   showDelete?: boolean;
+  'data-stickers'?: string;
 }
 
-const { groupName, stickerCount = 5, id, createdAt, showDelete = false } = Astro.props as Props;
+const { groupName, stickerCount = 5, id, createdAt, showDelete = false, 'data-stickers': dataStickers } = Astro.props as Props;
 
 // We'll parse the stickers from the data attribute in the client-side script
 let parsedStickers: any[] = [];
 ---
 
-<Card className="w-full hover:shadow-lg transition-shadow duration-300" data-group-id={id}>
+<Card className="w-full hover:shadow-lg transition-shadow duration-300" data-group-id={id} data-stickers={dataStickers}>
   <CardHeader className="">
     <div class="flex items-center justify-between">
       <div class="flex flex-col">
@@ -39,11 +40,11 @@ let parsedStickers: any[] = [];
             </svg>
           </Button>
         )}
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button variant="outline" size="sm" className="text-xs download-group-btn" data-group-id={id}>
           <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
           </svg>
-          Download
+          Download All
         </Button>
       </div>
     </div>

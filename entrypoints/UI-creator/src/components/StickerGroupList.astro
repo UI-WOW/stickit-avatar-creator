@@ -41,6 +41,18 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
     const loading = document.getElementById('collections-loading');
     /** @type {HTMLTemplateElement | null} */
     const tpl = /** @type {HTMLTemplateElement | null} */ (document.getElementById('sticker-card-template'));
+    
+    // Load JSZip library for ZIP creation
+    let JSZip;
+    if (typeof window !== 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        script.onload = () => {
+            JSZip = window.JSZip;
+            console.log('✅ JSZip library loaded for StickerGroupList');
+        };
+        document.head.appendChild(script);
+    }
 
     // Modal elements and helpers
     const modal = document.getElementById('delete-modal');
@@ -98,6 +110,144 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
         if (!delBtn) return;
         delBtn.addEventListener('click', () => openDeleteModal(id, name, cardEl));
     };
+    
+    // Helper function to download individual sticker
+    async function downloadSticker(stickerUrl, stickerName) {
+        if (!stickerUrl) {
+            console.error('No URL available for sticker:', stickerName);
+            return;
+        }
+        
+        try {
+            // Fetch the image
+            const response = await fetch(stickerUrl);
+            if (!response.ok) throw new Error('Failed to fetch image');
+            
+            const blob = await response.blob();
+            
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${stickerName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            
+            console.log('✅ Downloaded sticker:', stickerName);
+        } catch (error) {
+            console.error('❌ Failed to download sticker:', error);
+            alert(`Failed to download ${stickerName}: ${error.message}`);
+        }
+    }
+    
+    // Helper function to download all stickers from a group as ZIP
+    async function downloadGroupStickers(groupId, groupName, stickers) {
+        if (!stickers || stickers.length === 0) {
+            alert('No stickers to download');
+            return;
+        }
+        
+        if (!JSZip) {
+            alert('ZIP library not loaded yet. Please wait a moment and try again.');
+            return;
+        }
+        
+        try {
+            const zip = new JSZip();
+            let downloadCount = 0;
+            
+            // Show loading state
+            const downloadBtn = document.querySelector(`[data-group-id="${groupId}"] .download-group-btn`);
+            if (downloadBtn) {
+                const originalContent = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Preparing ZIP...
+                `;
+                downloadBtn.disabled = true;
+                
+                // Add each sticker to the ZIP
+                for (const sticker of stickers) {
+                    if (!sticker.url) continue;
+                    
+                    try {
+                        const response = await fetch(sticker.url);
+                        if (!response.ok) continue;
+                        
+                        const blob = await response.blob();
+                        const fileName = `${(sticker.name || 'sticker').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+                        
+                        zip.file(fileName, blob);
+                        downloadCount++;
+                        
+                        // Update progress
+                        downloadBtn.innerHTML = `
+                            <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Adding ${downloadCount}/${stickers.length}...
+                        `;
+                    } catch (error) {
+                        console.error('Failed to add sticker to ZIP:', sticker.name, error);
+                    }
+                }
+                
+                if (downloadCount === 0) {
+                    alert('No valid stickers found to download');
+                    downloadBtn.innerHTML = originalContent;
+                    downloadBtn.disabled = false;
+                    return;
+                }
+                
+                // Generate and download ZIP
+                downloadBtn.innerHTML = `
+                    <svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Creating ZIP...
+                `;
+                
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                
+                // Download the ZIP
+                const url = window.URL.createObjectURL(zipBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${groupName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-stickers-${new Date().toISOString().split('T')[0]}.zip`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                
+                // Reset button
+                downloadBtn.innerHTML = originalContent;
+                downloadBtn.disabled = false;
+                
+                console.log(`✅ Downloaded ${downloadCount} stickers as ZIP for group: ${groupName}`);
+            }
+        } catch (error) {
+            console.error('❌ Failed to create ZIP:', error);
+            alert(`Failed to create ZIP: ${error.message}`);
+            
+            // Reset button
+            const downloadBtn = document.querySelector(`[data-group-id="${groupId}"] .download-group-btn`);
+            if (downloadBtn) {
+                downloadBtn.innerHTML = originalContent;
+                downloadBtn.disabled = false;
+            }
+        }
+    }
 
     async function loadCollections() {
         if (!root) return;
@@ -179,6 +329,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                             stickers = groupData.input.stickers;
                         }
                         
+                        console.log('🔍 Sticker data for group', col.id, ':', stickers);
+                        console.log('🔍 Full group data:', groupData);
+                        console.log('🔍 Sticker URLs:', stickers.map(s => s?.url));
                         stickersData = JSON.stringify(stickers);
                     }
                 } catch (err) {
@@ -189,6 +342,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                 if (cardEl) {
                     try {
                         const stickers = JSON.parse(stickersData);
+                        
+                        // Update the data-stickers attribute on the card element
+                        cardEl.setAttribute('data-stickers', stickersData);
                         
                         // Update sticker count
                         const countElement = cardEl.querySelector('.sticker-count');
@@ -216,7 +372,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                                 previewContainer.innerHTML = `
                                     <div class="flex gap-3 flex-wrap py-2">
                                         ${stickersToShow.map((sticker: any, i: number) => `
-                                            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0">
+                                            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0 cursor-pointer download-individual-sticker" data-sticker-url="${sticker.url || ''}" data-sticker-name="${sticker.name || 'Sticker ' + (i + 1)}" title="Click to download">
                                                 ${sticker.url ? 
                                                     `<img src="${sticker.url}" alt="${sticker.name || 'Sticker ' + (i + 1)}" class="w-14 h-14 rounded-lg" />` : 
                                                     `<div class="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -252,6 +408,75 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
             console.error(err);
         }
     }
+
+    // Event delegation for download buttons
+    document.addEventListener('click', function(e) {
+        // Handle individual sticker downloads
+        if (e.target.closest('.download-individual-sticker')) {
+            const stickerElement = e.target.closest('.download-individual-sticker');
+            const stickerUrl = stickerElement.dataset.stickerUrl;
+            const stickerName = stickerElement.dataset.stickerName;
+            
+            if (stickerUrl) {
+                downloadSticker(stickerUrl, stickerName);
+            } else {
+                alert('No image available for this sticker');
+            }
+        }
+        
+        // Handle group download (Download All button)
+        if (e.target.closest('.download-group-btn')) {
+            const button = e.target.closest('.download-group-btn');
+            const groupId = button?.dataset?.groupId;
+            
+            // Find the actual card element (not the button)
+            // The button is inside the card, so we need to go up to find the card element
+            // Look for the parent element that contains an h3 (the card element)
+            let cardElement = button?.closest('[data-group-id]');
+            
+            // If we found the button itself, go up to find the actual card
+            if (cardElement === button) {
+                cardElement = button?.closest('[data-group-id]')?.parentElement;
+            }
+            
+            // If still not found, try a different approach
+            if (!cardElement || cardElement === button) {
+                cardElement = document.querySelector(`[data-group-id="${groupId}"]:not(.download-group-btn)`);
+            }
+            
+            console.log('🔍 Button element:', button);
+            console.log('🔍 Card element found:', cardElement);
+            
+            if (!cardElement || !groupId) {
+                console.error('Could not find card element or group ID');
+                alert('Error: Could not find group information');
+                return;
+            }
+            
+            const groupNameElement = cardElement.querySelector('h3');
+            const groupName = groupNameElement?.textContent || 'Unknown Group';
+            
+            // Get stickers data from the card
+            const stickersData = cardElement.getAttribute('data-stickers');
+            console.log('🔍 Card element:', cardElement);
+            console.log('🔍 All attributes on card:', cardElement.attributes);
+            console.log('🔍 Stickers data from card:', stickersData);
+            
+            if (stickersData) {
+                try {
+                    const stickers = JSON.parse(stickersData);
+                    console.log('🔍 Parsed stickers:', stickers);
+                    downloadGroupStickers(groupId, groupName, stickers);
+                } catch (error) {
+                    console.error('Failed to parse stickers data:', error);
+                    alert('Failed to load stickers for download');
+                }
+            } else {
+                console.error('No stickers data found on card element');
+                alert('No stickers found for this group');
+            }
+        }
+    });
 
     loadCollections();
 </script>

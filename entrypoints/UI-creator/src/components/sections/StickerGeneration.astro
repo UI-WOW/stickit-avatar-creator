@@ -320,6 +320,18 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		let generatedStickers = []; // Store generated stickers
 		const API_BASE = 'http://localhost:8002';
 		
+		// Load JSZip library for ZIP creation
+		let JSZip;
+		if (typeof window !== 'undefined') {
+			const script = document.createElement('script');
+			script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+			script.onload = () => {
+				JSZip = window.JSZip;
+				console.log('✅ JSZip library loaded');
+			};
+			document.head.appendChild(script);
+		}
+		
 		// Helper function to update stickers display
 		function updateStickersDisplay() {
 			const container = document.getElementById('stickersContainer');
@@ -423,7 +435,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 					</div>
 					
 					<!-- Actions -->
-					<div class="flex gap-2">
+					<div class="flex gap-2 flex-wrap">
 						${isGenerating ? `
 							<button class="flex-1 bg-gray-300 text-gray-500 px-4 py-2.5 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center" disabled>
 								<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -443,6 +455,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
 								</svg>
 								Modify
+							</button>
+							<button class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 download-sticker flex items-center justify-center shadow-sm hover:shadow-md" data-sticker-id="${sticker.id}">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+								</svg>
+								Download
 							</button>
 						`}
 					</div>
@@ -507,6 +525,140 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				}
 			}));
 			window.dispatchEvent(new CustomEvent('requestSave'));
+		}
+		
+		// Helper function to download individual sticker
+		async function downloadSticker(sticker) {
+			if (!sticker.url) {
+				console.error('No URL available for sticker:', sticker.name);
+				return;
+			}
+			
+			try {
+				// Fetch the image
+				const response = await fetch(sticker.url);
+				if (!response.ok) throw new Error('Failed to fetch image');
+				
+				const blob = await response.blob();
+				
+				// Create download link
+				const url = window.URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = `${sticker.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+				
+				// Trigger download
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				
+				// Clean up
+				window.URL.revokeObjectURL(url);
+				
+				console.log('✅ Downloaded sticker:', sticker.name);
+			} catch (error) {
+				console.error('❌ Failed to download sticker:', error);
+				alert(`Failed to download ${sticker.name}: ${error.message}`);
+			}
+		}
+		
+		// Helper function to download all stickers as ZIP
+		async function downloadAllStickers() {
+			if (generatedStickers.length === 0) {
+				alert('No stickers to download');
+				return;
+			}
+			
+			if (!JSZip) {
+				alert('ZIP library not loaded yet. Please wait a moment and try again.');
+				return;
+			}
+			
+			try {
+				const zip = new JSZip();
+				let downloadCount = 0;
+				
+				// Show loading state
+				const downloadBtn = document.getElementById('downloadAll');
+				const originalContent = downloadBtn.innerHTML;
+				downloadBtn.innerHTML = `
+					<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Preparing ZIP...
+				`;
+				downloadBtn.disabled = true;
+				
+				// Add each sticker to the ZIP
+				for (const sticker of generatedStickers) {
+					if (!sticker.url) continue;
+					
+					try {
+						const response = await fetch(sticker.url);
+						if (!response.ok) continue;
+						
+						const blob = await response.blob();
+						const fileName = `${sticker.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+						
+						zip.file(fileName, blob);
+						downloadCount++;
+						
+						// Update progress
+						downloadBtn.innerHTML = `
+							<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+							</svg>
+							Adding ${downloadCount}/${generatedStickers.length}...
+						`;
+					} catch (error) {
+						console.error('Failed to add sticker to ZIP:', sticker.name, error);
+					}
+				}
+				
+				if (downloadCount === 0) {
+					alert('No valid stickers found to download');
+					downloadBtn.innerHTML = originalContent;
+					downloadBtn.disabled = false;
+					return;
+				}
+				
+				// Generate and download ZIP
+				downloadBtn.innerHTML = `
+					<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Creating ZIP...
+				`;
+				
+				const zipBlob = await zip.generateAsync({ type: 'blob' });
+				
+				// Download the ZIP
+				const url = window.URL.createObjectURL(zipBlob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = `stickit-stickers-${new Date().toISOString().split('T')[0]}.zip`;
+				
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				
+				// Clean up
+				window.URL.revokeObjectURL(url);
+				
+				// Reset button
+				downloadBtn.innerHTML = originalContent;
+				downloadBtn.disabled = false;
+				
+				console.log(`✅ Downloaded ${downloadCount} stickers as ZIP`);
+			} catch (error) {
+				console.error('❌ Failed to create ZIP:', error);
+				alert(`Failed to create ZIP: ${error.message}`);
+				
+				// Reset button
+				const downloadBtn = document.getElementById('downloadAll');
+				downloadBtn.innerHTML = originalContent;
+				downloadBtn.disabled = false;
+			}
 		}
 		
 		// Helper function to show loading state for existing stickers
@@ -1235,6 +1387,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			}
 		}
 		
+		// Download All button event listener
+		const downloadAllBtn = document.getElementById('downloadAll');
+		if (downloadAllBtn) {
+			downloadAllBtn.addEventListener('click', downloadAllStickers);
+		}
+
 		// Event delegation for dynamic buttons
 		document.addEventListener('click', function(e) {
 			if (e.target.closest('.regenerate-sticker')) {
@@ -1245,6 +1403,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				const button = e.target.closest('.edit-sticker');
 				const stickerId = button.dataset.stickerId;
 				openEditModal(stickerId);
+			} else if (e.target.closest('.download-sticker')) {
+				const button = e.target.closest('.download-sticker');
+				const stickerId = button.dataset.stickerId;
+				const sticker = generatedStickers.find(s => s.id === stickerId);
+				if (sticker) {
+					downloadSticker(sticker);
+				}
 			} else if (e.target.closest('.generate-default-sticker')) {
 				const button = e.target.closest('.generate-default-sticker');
 				const stickerIndex = parseInt(button.dataset.stickerId);

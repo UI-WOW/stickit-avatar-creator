@@ -24,7 +24,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		<div class="flex justify-center my-8">
 			<div class="relative">
 				<!-- Desktop: Phone Frame -->
-				<div class="hidden md:block w-80 h-[600px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
+				<div class="hidden md:block w-100 h-[700px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
 					<!-- Phone Screen -->
 					<div class="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
 						<!-- Status Bar -->
@@ -39,9 +39,10 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 						</div>
 						
 						<!-- React Chat Component -->
-						<div class="h-[calc(100%-2rem)]">
+						<div class="h-[calc(100%-2rem)] flex flex-col">
 							<ChatInterface 
 								apiBase={API_BASE}
+								embedded={true}
 								client:load
 							/>
 						</div>
@@ -49,7 +50,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				</div>
 				
 				<!-- Mobile: Full-Screen Chat Interface -->
-				<div class="md:hidden w-full h-[600px] bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col">
+				<div class="md:hidden w-full h-[600px] flex flex-col">
 					<ChatInterface 
 						apiBase={API_BASE}
 						client:load
