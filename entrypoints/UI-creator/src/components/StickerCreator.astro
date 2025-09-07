@@ -75,9 +75,7 @@ import StickerGeneration from './sections/StickerGeneration.astro';
 		document.querySelectorAll('[data-step]').forEach(step => {
 			step.addEventListener('click', function() {
 				const stepNumber = parseInt(this.dataset.step);
-				if (stepNumber <= currentStep) {
-					goToStep(stepNumber);
-				}
+				goToStep(stepNumber);
 			});
 		});
 
