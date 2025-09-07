@@ -1,0 +1,157 @@
+---
+import StickerGroupCard from '@/components/StickerGroupCard.astro';
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
+---
+
+<div id="collections-root" class="space-y-6">
+    <div class="text-center text-gray-500" id="collections-loading">Loading your sticker groups...</div>
+    <template id="sticker-card-template">
+        <StickerGroupCard groupName="__NAME__" stickerCount={5} id="__ID__" createdAt="__CREATED__" showDelete={true} />
+    </template>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden">
+    <div id="delete-modal-overlay" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative mx-auto mt-24 w-[90%] max-w-md">
+        <div class="rounded-xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">Delete sticker group</h3>
+                <p class="mt-1 text-sm text-gray-600">This action cannot be undone.</p>
+            </div>
+            <div class="px-5 py-4">
+                <p class="text-sm text-gray-700">Are you sure you want to delete
+                    <span id="delete-modal-name" class="font-semibold text-gray-900"></span>?
+                </p>
+            </div>
+            <div class="px-5 py-4 bg-gray-50 flex justify-end gap-2">
+                <button id="delete-modal-cancel" class="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</button>
+                <button id="delete-modal-confirm" class="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // @ts-nocheck
+    const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+    /** @type {HTMLElement|null} */
+    const root = document.getElementById('collections-root');
+    /** @type {HTMLElement|null} */
+    const loading = document.getElementById('collections-loading');
+    /** @type {HTMLTemplateElement | null} */
+    const tpl = /** @type {HTMLTemplateElement | null} */ (document.getElementById('sticker-card-template'));
+
+    // Modal elements and helpers
+    const modal = document.getElementById('delete-modal');
+    const modalName = document.getElementById('delete-modal-name');
+    const modalCancel = document.getElementById('delete-modal-cancel');
+    const modalConfirm = document.getElementById('delete-modal-confirm');
+    const modalOverlay = document.getElementById('delete-modal-overlay');
+
+    const showModal = () => modal && modal.classList.remove('hidden');
+    const hideModal = () => modal && modal.classList.add('hidden');
+
+    let pendingDeleteId = '';
+    let pendingDeleteCard = null;
+
+    function escToClose(e) {
+        if (e.key === 'Escape') {
+            hideModal();
+            document.removeEventListener('keydown', escToClose);
+        }
+    }
+
+    function openDeleteModal(id, name, cardEl) {
+        pendingDeleteId = id;
+        pendingDeleteCard = cardEl;
+        if (modalName) modalName.textContent = name ? `"${name}"` : 'this collection';
+        if (modalCancel) modalCancel.onclick = () => hideModal();
+        if (modalOverlay) modalOverlay.onclick = () => hideModal();
+        if (modalConfirm) {
+            modalConfirm.onclick = async () => {
+                try {
+                    const r = await fetch(`${API_BASE}/sticker-groups/${pendingDeleteId}`, { method: 'DELETE', credentials: 'include' });
+                    if (!r.ok) throw new Error('Delete failed');
+                    pendingDeleteCard && pendingDeleteCard.remove();
+                    hideModal();
+                } catch (e) {
+                    alert('Failed to delete');
+                    console.error(e);
+                }
+            };
+        }
+        document.addEventListener('keydown', escToClose);
+        showModal();
+    }
+
+    /** @type {(html: string) => (Element|null)} */
+    const htmlToElement = (html) => {
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        return template.content.firstElementChild;
+    };
+
+    /** @type {(cardEl: Element, id: string, name: string) => void} */
+    const bindDelete = (cardEl, id, name) => {
+        const delBtn = cardEl.querySelector('[data-action="delete"]');
+        if (!delBtn) return;
+        delBtn.addEventListener('click', () => openDeleteModal(id, name, cardEl));
+    };
+
+    async function loadCollections() {
+        if (!root) return;
+        try {
+            const url = `${API_BASE}/sticker-groups`;
+            const res = await fetch(url, { credentials: 'include' });
+            if (!res.ok) {
+                const t = await res.text().catch(() => '');
+                throw new Error(`Request failed (${res.status}): ${t}`);
+            }
+            const data = await res.json();
+            const items = Array.isArray(data?.items) ? data.items : [];
+
+            if (loading) loading.remove();
+
+            if (items.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'text-center text-gray-500';
+                empty.textContent = 'No sticker groups yet. Create your first group to get started!';
+                root.appendChild(empty);
+                return;
+            }
+
+            const list = document.createElement('div');
+            list.className = 'grid grid-cols-1 gap-4';
+
+            for (const col of items) {
+                const raw = (tpl?.innerHTML || '')
+                    .replaceAll('__ID__', String(col.id ?? ''))
+                    .replaceAll('__NAME__', String(col.name ?? 'Untitled'))
+                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()));
+                const cardEl = htmlToElement(raw);
+                if (cardEl) {
+                    bindDelete(cardEl, col.id, String(col.name ?? ''));
+                    list.appendChild(cardEl);
+                }
+            }
+
+            root.appendChild(list);
+        } catch (err) {
+            if (loading) loading.remove();
+            if (root) {
+                const e = document.createElement('div');
+                e.className = 'text-center text-red-600';
+                e.textContent = 'Failed to load collections.';
+                root.appendChild(e);
+            }
+            console.error(err);
+        }
+    }
+
+    loadCollections();
+</script>
+
+
+
+
