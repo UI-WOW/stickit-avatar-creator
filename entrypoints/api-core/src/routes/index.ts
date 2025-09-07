@@ -4,6 +4,7 @@ import { setupImageGenerationRoutes } from './imageGeneration.js'
 import { setupStickerProcessingRoutes } from './stickerProcessing.js'
 import { setupReferenceImageRoutes } from './referenceImages.js'
 import { setupHealthRoutes } from './health.js'
+import { setupChatRoutes } from './chat.js'
 import type { honoContext } from '../index.js'
 
 export function setupAllRoutes(app: Hono<honoContext>) {
@@ -12,4 +13,5 @@ export function setupAllRoutes(app: Hono<honoContext>) {
   setupImageGenerationRoutes(app)
   setupStickerProcessingRoutes(app)
   setupReferenceImageRoutes(app)
+  setupChatRoutes(app)
 }

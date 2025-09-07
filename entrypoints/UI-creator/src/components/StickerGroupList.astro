@@ -125,6 +125,40 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
             list.className = 'grid grid-cols-1 gap-4';
 
             for (const col of items) {
+                // Create card with loading state first
+                const raw = (tpl?.innerHTML || '')
+                    .replaceAll('__ID__', String(col.id ?? ''))
+                    .replaceAll('__NAME__', String(col.name ?? 'Untitled'))
+                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()))
+                    .replaceAll('__STICKERS__', '[]');
+                const cardEl = htmlToElement(raw);
+                if (cardEl) {
+                    bindDelete(cardEl, col.id, String(col.name ?? ''));
+                    
+                    // Show loading state
+                    const countElement = cardEl.querySelector('.sticker-count');
+                    if (countElement) {
+                        countElement.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 border-2 border-gray-300 border-t-purple-500 rounded-full animate-spin"></div>
+                                <span class="text-gray-400">Loading...</span>
+                            </div>
+                        `;
+                    }
+                    
+                    const previewContainer = cardEl.querySelector('.sticker-preview-container');
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `
+                            <div class="flex gap-3 flex-wrap py-2">
+                                <div class="w-20 h-20 bg-gray-200 rounded-xl animate-pulse flex-shrink-0"></div>
+                                <div class="w-20 h-20 bg-gray-200 rounded-xl animate-pulse flex-shrink-0"></div>
+                                <div class="w-20 h-20 bg-gray-200 rounded-xl animate-pulse flex-shrink-0"></div>
+                            </div>
+                        `;
+                    }
+                    
+                    list.appendChild(cardEl);
+                }
                 
                 // Fetch the actual sticker data for this group
                 let stickersData = '[]';
@@ -151,16 +185,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                     console.error('❌ Error fetching group data for:', col.id, err);
                 }
                 
-                const raw = (tpl?.innerHTML || '')
-                    .replaceAll('__ID__', String(col.id ?? ''))
-                    .replaceAll('__NAME__', String(col.name ?? 'Untitled'))
-                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()))
-                    .replaceAll('__STICKERS__', stickersData);
-                const cardEl = htmlToElement(raw);
+                // Update the card with actual data
                 if (cardEl) {
-                    bindDelete(cardEl, col.id, String(col.name ?? ''));
-                    
-                    // Parse and display stickers immediately
                     try {
                         const stickers = JSON.parse(stickersData);
                         
@@ -211,8 +237,6 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                     } catch (e) {
                         // Handle parsing errors silently
                     }
-                    
-                    list.appendChild(cardEl);
                 }
             }
 
