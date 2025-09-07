@@ -42,9 +42,9 @@ export class StickerService {
       });
       
       formData.append('file', fileBlob, originalFilename);
-      formData.append('white_threshold', '240');
-      formData.append('output_size', '512');
-      formData.append('quality', '90');
+      // formData.append('white_threshold', '255');
+      // formData.append('output_size', '512');
+      // formData.append('quality', '90');
       
       // Call Python service for WhatsApp-compatible stickers
       const response = await fetch(`${pythonServiceUrl}/create-whatsapp-sticker`, {

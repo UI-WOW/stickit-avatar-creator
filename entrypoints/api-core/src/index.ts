@@ -54,7 +54,7 @@ app.get('/save-image-test', async (c) => {
     const prompt = await c.req.query('prompt')
     
     // Default prompt if none provided
-    const imagePrompt = prompt || `A kawaii-style sticker of a bouncy Tigger from Winnie the Pooh. He's mid-bounce with his signature springy tail, wearing his iconic orange and black stripes. He has an enthusiastic smile and sparkly eyes. The design features bold, clean outlines, simple cel-shading, and a vibrant color palette. The background must be white.`;
+    const imagePrompt = prompt || `A kawaii-style sticker of an adorable elephant. The elephant has big expressive eyes, a happy smile, and a playful pose with its trunk curled up. The design features extra thick black outlines (5-6 pixels wide), bold clean lines, simple cel-shading, and a vibrant color palette. The character should have a strong silhouette with prominent black borders around all edges. The background must be white.`;
     
     // Get Gemini instance from context
     const gemini = c.get('gemini');
