@@ -104,6 +104,19 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 	</button>
 </div>
 
+<!-- Go Back Button -->
+<div class="flex justify-center mt-4">
+	<button 
+		class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+		id="goBackAvatarCreation"
+	>
+		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+		</svg>
+		Back to Brand Identity
+	</button>
+</div>
+
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', function() {
 		// Style selection
@@ -162,6 +175,17 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 				// Emit custom event to move to next step
 				window.dispatchEvent(new CustomEvent('stepCompleted', { 
 					detail: { step: 'avatarCreation', data: formData } 
+				}));
+			});
+		}
+
+		// Go back button
+		const goBackButton = document.getElementById('goBackAvatarCreation');
+		if (goBackButton) {
+			goBackButton.addEventListener('click', function() {
+				// Emit custom event to go back
+				window.dispatchEvent(new CustomEvent('goBack', { 
+					detail: { fromStep: 'avatarCreation' } 
 				}));
 			});
 		}

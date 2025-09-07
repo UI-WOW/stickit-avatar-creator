@@ -133,6 +133,14 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 		// Initialize progress
 		updateProgress();
 
+		// Check for URL hash navigation
+		const hash = window.location.hash;
+		if (hash === '#see-it-in-action') {
+			// Navigate directly to the See It In Action section (step 4)
+			currentStep = 4;
+			goToStep(4);
+		}
+
 		// Step navigation
 		document.querySelectorAll('[data-step]').forEach(step => {
 			step.addEventListener('click', function() {
@@ -160,6 +168,22 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 			}
 		});
 
+		// Listen for go back events
+		window.addEventListener('goBack', function(event) {
+			const { fromStep } = event.detail;
+			
+			if (fromStep === 'avatarCreation' && currentStep === 2) {
+				currentStep = 1;
+				goToStep(1);
+			} else if (fromStep === 'stickerGeneration' && currentStep === 3) {
+				currentStep = 2;
+				goToStep(2);
+			} else if (fromStep === 'seeItInAction' && currentStep === 4) {
+				currentStep = 3;
+				goToStep(3);
+			}
+		});
+
 		function goToStep(stepNumber) {
 			// Hide all sections
 			document.querySelectorAll('.section').forEach(section => {
@@ -176,6 +200,9 @@ import SeeItInAction from './sections/SeeItInAction.astro';
 
 			currentStep = stepNumber;
 			updateProgress();
+			
+			// Scroll to top of the page
+			window.scrollTo({ top: 0, behavior: 'smooth' });
 		}
 
 		function updateProgress() {

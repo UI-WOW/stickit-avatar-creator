@@ -152,6 +152,33 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 	</CardContent>
 </Card>
 
+<!-- See It In Action Button Outside Card -->
+<div class="flex justify-end mt-6">
+	<button 
+		class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
+		id="seeItInActionBtn"
+	>
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+		</svg>
+		See It In Action
+	</button>
+</div>
+
+<!-- Go Back Button -->
+<div class="flex justify-center mt-4">
+	<button 
+		class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+		id="goBackStickerGeneration"
+	>
+		<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+		</svg>
+		Back to Avatar Creation
+	</button>
+</div>
+
 <!-- Add Sticker Modal -->
 <div id="addStickerModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center z-[9999]">
 	<div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
@@ -354,6 +381,28 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				// Instead of redirecting, emit event to move to next step
 				window.dispatchEvent(new CustomEvent('stepCompleted', { 
 					detail: { step: 'stickerGeneration', data: { completed: true } } 
+				}));
+			});
+		}
+
+		// See It In Action button
+		const seeItInActionBtn = document.getElementById('seeItInActionBtn');
+		if (seeItInActionBtn) {
+			seeItInActionBtn.addEventListener('click', function() {
+				// Emit event to move to next step
+				window.dispatchEvent(new CustomEvent('stepCompleted', { 
+					detail: { step: 'stickerGeneration', data: { completed: true } } 
+				}));
+			});
+		}
+
+		// Go back button
+		const goBackButton = document.getElementById('goBackStickerGeneration');
+		if (goBackButton) {
+			goBackButton.addEventListener('click', function() {
+				// Emit custom event to go back
+				window.dispatchEvent(new CustomEvent('goBack', { 
+					detail: { fromStep: 'stickerGeneration' } 
 				}));
 			});
 		}
