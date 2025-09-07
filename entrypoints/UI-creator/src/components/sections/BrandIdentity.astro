@@ -45,7 +45,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				placeholder="Describe what your avatar will do and how it will help users. This helps us create the right personality and stickers..."
 				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
 				id="avatarDescription"
-			>My Tech Assistant helps users with technical questions, provides support, and makes technology more accessible through friendly conversations.</textarea>
+			></textarea>
 		</div>
 
 		<!-- Avatar Personality -->
@@ -103,6 +103,14 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		const params = new URLSearchParams(window.location.search);
 		const groupId = params.get('groupId');
 
+		// Loading state
+		const loadingEl = document.createElement('div');
+		loadingEl.id = 'brand-loading';
+		loadingEl.className = 'text-sm text-gray-500 my-2';
+		loadingEl.textContent = 'Loading...';
+		const header = document.querySelector('h2');
+		if (groupId && header && header.parentElement) header.parentElement.appendChild(loadingEl);
+
 		async function loadGroup() {
 			if (!groupId) return;
 			try {
@@ -115,16 +123,17 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				// If latest config has input, try to populate known fields
 				const latestCfg = Array.isArray(data?.configs) ? data.configs[0] : null;
 				const input = latestCfg?.input || {};
+				const bi = input.brandIdentity || {};
 				const avatarTypeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById('avatarType'));
-				if (avatarTypeEl && typeof input.avatarType === 'string') avatarTypeEl.value = input.avatarType;
+				if (avatarTypeEl && typeof bi.avatarType === 'string') avatarTypeEl.value = bi.avatarType;
 				const descEl = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('avatarDescription'));
-				if (descEl && typeof input.avatarDescription === 'string') descEl.value = input.avatarDescription;
+				if (descEl && typeof bi.avatarDescription === 'string') descEl.value = bi.avatarDescription;
 				// Personality traits
-				if (Array.isArray(input.personalityTraits)) {
+				if (Array.isArray(bi.personalityTraits)) {
 					document.querySelectorAll('[data-trait]').forEach(btn => {
 						const el = btn instanceof HTMLElement ? btn : null;
 						const name = el?.dataset?.trait;
-						const selected = !!(name && input.personalityTraits.includes(name));
+						const selected = !!(name && bi.personalityTraits.includes(name));
 						if (el) {
 							el.classList.toggle('border-indigo-500', selected);
 							el.classList.toggle('bg-indigo-50', selected);
@@ -137,6 +146,9 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				}
 			} catch (e) {
 				console.error('Failed to load group', e);
+			} finally {
+				const l = document.getElementById('brand-loading');
+				if (l) l.remove();
 			}
 		}
 
@@ -183,9 +195,12 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 							body: JSON.stringify({
 								name: formData.collectionName,
 								input: {
-									avatarType: formData.avatarType,
-									avatarDescription: formData.avatarDescription,
-									personalityTraits: formData.personalityTraits
+									brandIdentity: {
+										stickerGroupName: formData.collectionName,
+										avatarType: formData.avatarType,
+										avatarDescription: formData.avatarDescription,
+										personalityTraits: formData.personalityTraits
+									}
 								}
 							})
 						});

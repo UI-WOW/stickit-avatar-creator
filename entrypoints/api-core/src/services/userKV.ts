@@ -1,3 +1,5 @@
+import type { GroupConfigInput } from './types.js'
+
 export type StickerGroup = {
   id: string
   name: string
@@ -7,7 +9,7 @@ export type StickerGroup = {
 export type GroupConfig = {
   id: string
   groupId: string
-  input: Record<string, unknown>
+  input: GroupConfigInput
   imageUrls?: string[]
   createdAt: string
 }
@@ -75,7 +77,7 @@ export class UserKV {
     kv: KVNamespace,
     userId: string,
     groupId: string,
-    input: Record<string, unknown>,
+    input: GroupConfigInput,
     imageUrls?: string[]
   ): Promise<GroupConfig> {
     const list = await this.listConfigs(kv, userId, groupId)
@@ -116,7 +118,7 @@ export class UserKVProvider {
     return UserKV.listConfigs(this.kv, userId, groupId)
   }
 
-  addConfig(userId: string, groupId: string, input: Record<string, unknown>, imageUrls?: string[]) {
+  addConfig(userId: string, groupId: string, input: GroupConfigInput, imageUrls?: string[]) {
     return UserKV.addConfig(this.kv, userId, groupId, input, imageUrls)
   }
 

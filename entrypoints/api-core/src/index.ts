@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { Bindings } from './bindings.js'
 import { createRequestLoggerMiddleware } from './middleware/requestLogger.js'
 import { GoogleGenAI } from "@google/genai";
-import { StickerService, UserKVProvider } from './services/index.js';
+import { StickerService, UserKVProvider, type GroupConfigInput } from './services/index.js';
 import { cors } from 'hono/cors'
 import { setCookie } from 'hono/cookie'
 
@@ -103,6 +103,9 @@ app.post('/sticker-groups', async (c) => {
 })
 
 app.get('/sticker-groups/:id', async (c) => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const uid = userId as string
@@ -119,7 +122,7 @@ app.post('/sticker-groups/:id', async (c) => {
   const groupId = c.req.param('id')
   const body = await c.req.json().catch(() => ({}))
   const name: string | undefined = body?.name
-  const input: Record<string, unknown> | undefined = body?.input
+  const input: GroupConfigInput | undefined = body?.input
   const imageUrls: string[] | undefined = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
 
   let updated: any = null
@@ -133,44 +136,7 @@ app.post('/sticker-groups/:id', async (c) => {
 
   // If input or imageUrls present, append a new config entry
   if (input || imageUrls) {
-    await c.get('userKV').addConfig(uid, groupId, input ?? {}, imageUrls)
-  }
-
-  const { group, configs } = await c.get('userKV').getGroupWithConfigs(uid, groupId)
-  return c.json({ ...group!, configs })
-})
-
-app.get('/sticker-groups/:id', async (c) => {
-  const userId = c.get('userId') as string | undefined
-  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const uid = userId as string
-  const groupId = c.req.param('id')
-  const { group, configs } = await c.get('userKV').getGroupWithConfigs(uid, groupId)
-  if (!group) return c.json({ error: 'not found' }, 404)
-  return c.json({ ...group, configs })
-})
-
-app.post('/sticker-groups/:id', async (c) => {
-  const userId = c.get('userId') as string | undefined
-  if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const uid = userId as string
-  const groupId = c.req.param('id')
-  const body = await c.req.json().catch(() => ({}))
-  const name: string | undefined = body?.name
-  const input: Record<string, unknown> | undefined = body?.input
-  const imageUrls: string[] | undefined = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
-
-  let updated: any = null
-  if (typeof name === 'string' && name.length > 0) {
-    updated = await c.get('userKV').updateGroupName(uid, groupId, name)
-    if (!updated) return c.json({ error: 'not found' }, 404)
-  } else {
-    updated = await c.get('userKV').getGroupById(uid, groupId)
-    if (!updated) return c.json({ error: 'not found' }, 404)
-  }
-
-  if (input || imageUrls) {
-    await c.get('userKV').addConfig(uid, groupId, input ?? {}, imageUrls)
+    await c.get('userKV').addConfig(uid, groupId, (input ?? {}), imageUrls)
   }
 
   const { group, configs } = await c.get('userKV').getGroupWithConfigs(uid, groupId)
