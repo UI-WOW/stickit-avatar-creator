@@ -1,15 +1,54 @@
 ---
+import StickerGroupCard from '@/components/StickerGroupCard.astro';
 const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 ---
 
 <div id="collections-root" class="space-y-6">
     <div class="text-center text-gray-500" id="collections-loading">Loading your sticker groups...</div>
+    <template id="sticker-card-template">
+        <StickerGroupCard groupName="__NAME__" stickerCount={5} id="__ID__" createdAt="__CREATED__" showDelete={true} />
+    </template>
 </div>
 
 <script>
+    // @ts-nocheck
     const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+    /** @type {HTMLElement|null} */
     const root = document.getElementById('collections-root');
+    /** @type {HTMLElement|null} */
     const loading = document.getElementById('collections-loading');
+    /** @type {HTMLTemplateElement | null} */
+    const tpl = /** @type {HTMLTemplateElement | null} */ (document.getElementById('sticker-card-template'));
+
+    /**
+     * @param {string} html
+     * @returns {Element|null}
+     */
+    function htmlToElement(html) {
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        return template.content.firstElementChild;
+    }
+
+    /**
+     * @param {Element} cardEl
+     * @param {string} id
+     */
+    function bindDelete(cardEl, id) {
+        const delBtn = cardEl.querySelector('[data-action="delete"]');
+        if (!delBtn) return;
+        delBtn.addEventListener('click', async () => {
+            if (!confirm('Delete this collection?')) return;
+            try {
+                const r = await fetch(`${API_BASE}/sticker-groups/${id}`, { method: 'DELETE', credentials: 'include' });
+                if (!r.ok) throw new Error('Delete failed');
+                cardEl.remove();
+            } catch (e) {
+                alert('Failed to delete');
+                console.error(e);
+            }
+        });
+    }
 
     async function loadCollections() {
         if (!root) return;
@@ -37,39 +76,15 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
             list.className = 'grid grid-cols-1 gap-4';
 
             for (const col of items) {
-                const card = document.createElement('div');
-                card.className = 'rounded-lg border bg-white p-4 shadow-sm flex items-center justify-between';
-
-                const title = document.createElement('div');
-                title.className = 'text-lg font-semibold text-gray-800';
-                title.textContent = col.name || 'Untitled';
-
-                const meta = document.createElement('div');
-                meta.className = 'text-sm text-gray-500 mt-1';
-                meta.textContent = new Date(col.createdAt || Date.now()).toLocaleString();
-
-                const left = document.createElement('div');
-                left.appendChild(title);
-                left.appendChild(meta);
-
-                const del = document.createElement('button');
-                del.className = 'text-red-600 hover:text-red-700 text-sm';
-                del.textContent = 'Delete';
-                del.addEventListener('click', async () => {
-                    if (!confirm('Delete this collection?')) return;
-                    try {
-                        const r = await fetch(`${API_BASE}/sticker-groups/${col.id}`, { method: 'DELETE', credentials: 'include' });
-                        if (!r.ok) throw new Error('Delete failed');
-                        location.reload();
-                    } catch (e) {
-                        alert('Failed to delete');
-                        console.error(e);
-                    }
-                });
-
-                card.appendChild(left);
-                card.appendChild(del);
-                list.appendChild(card);
+                const raw = (tpl?.innerHTML || '')
+                    .replaceAll('__ID__', String(col.id ?? ''))
+                    .replaceAll('__NAME__', String(col.name ?? 'Untitled'))
+                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()));
+                const cardEl = htmlToElement(raw);
+                if (cardEl) {
+                    bindDelete(cardEl, col.id);
+                    list.appendChild(cardEl);
+                }
             }
 
             root.appendChild(list);

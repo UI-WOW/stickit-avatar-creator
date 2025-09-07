@@ -36,7 +36,8 @@ app.use('*', async (c, next) => {
   const cookieHeader = c.req.header('cookie') || ''
   const matchNew = cookieHeader.match(/(?:^|;\s*)stickit-user=([^;]+)/)
   const matchLegacy = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
-  const userId = matchNew ? decodeURIComponent(matchNew[1]) : (matchLegacy ? decodeURIComponent(matchLegacy[1]) : null)
+  const rawId = (matchNew && matchNew[1]) || (matchLegacy && matchLegacy[1]) || null
+  const userId = rawId ? decodeURIComponent(rawId) : null
   if (userId) c.set('userId', userId)
   await next()
 })
@@ -82,47 +83,52 @@ app.get('/', (c) => {
 app.get('/sticker-groups', async (c) => {
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const items = await c.get('userKV').listGroups(userId)
+  const uid = userId as string
+  const items = await c.get('userKV').listGroups(uid)
   console.log('[GET /sticker-groups]', { userId, count: items.length })
-  c.header('X-Session-Id', userId)
+  c.header('X-Session-Id', uid)
   return c.json({ items })
 })
 
 app.post('/sticker-groups', async (c) => {
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const uid = userId as string
   const body = await c.req.json().catch(() => ({}))
   const name = body?.name || 'Untitled'
-  const item = await c.get('userKV').addGroup(userId, name)
-  console.log('[POST /sticker-groups]', { userId, item })
-  c.header('X-Session-Id', userId)
+  const item = await c.get('userKV').addGroup(uid, name)
+  console.log('[POST /sticker-groups]', { userId: uid, item })
+  c.header('X-Session-Id', uid)
   return c.json(item, 201)
 })
 
 app.get('/sticker-groups/:id/configs', async (c) => {
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const uid = userId as string
   const groupId = c.req.param('id')
-  const items = await c.get('userKV').listConfigs(userId, groupId)
+  const items = await c.get('userKV').listConfigs(uid, groupId)
   return c.json({ items })
 })
 
 app.post('/sticker-groups/:id/configs', async (c) => {
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const uid = userId as string
   const groupId = c.req.param('id')
   const body = await c.req.json().catch(() => ({}))
   const input = body?.input ?? {}
   const imageUrls = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
-  const item = await c.get('userKV').addConfig(userId, groupId, input, imageUrls)
+  const item = await c.get('userKV').addConfig(uid, groupId, input, imageUrls)
   return c.json(item, 201)
 })
 
 app.delete('/sticker-groups/:id', async (c) => {
   const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
+  const uid = userId as string
   const groupId = c.req.param('id')
-  const deleted = await c.get('userKV').deleteGroup(userId, groupId)
+  const deleted = await c.get('userKV').deleteGroup(uid, groupId)
   if (!deleted) return c.json({ success: false, message: 'not found' }, 404)
   return c.json({ success: true })
 })
