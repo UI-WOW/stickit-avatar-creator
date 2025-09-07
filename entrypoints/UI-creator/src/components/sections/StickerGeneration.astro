@@ -1,0 +1,360 @@
+---
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+---
+
+<Card class="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+	<CardHeader class="pb-4">
+		<div class="flex items-center space-x-3">
+			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
+			<h2 class="text-2xl font-bold text-gray-800">Sticker Generation</h2>
+		</div>
+		<p class="text-gray-600 mt-2">Generate and manage your AI assistant's sticker collection</p>
+	</CardHeader>
+	<CardContent class="space-y-8">
+		<!-- Add Sticker Button -->
+		<div class="text-center">
+			<Button size="lg" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-8 py-4 text-lg" id="addStickerBtn">
+				<svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+				</svg>
+				Add New Sticker
+			</Button>
+			<p class="text-sm text-gray-500 mt-3">Create custom stickers for specific scenarios</p>
+		</div>
+
+		<!-- Generated Stickers with Metadata -->
+		<div class="space-y-6">
+			<div class="flex items-center justify-between">
+				<h3 class="text-lg font-semibold text-gray-800">Generated Stickers</h3>
+				<div class="flex gap-2">
+					<Button variant="outline" size="sm" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0" id="regenerateAll">
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+						</svg>
+						Regenerate All
+					</Button>
+					<Button variant="outline" size="sm" id="downloadAll">
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+						</svg>
+						Download All
+					</Button>
+					<Button variant="outline" size="sm" id="previewInChat">
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+						</svg>
+						Preview in Chat
+					</Button>
+				</div>
+			</div>
+			
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="stickersContainer">
+				{[
+					{ 
+						name: 'Happy Response', 
+						scenario: 'When user is satisfied with the result',
+						icon: '😊',
+						description: 'Shows satisfaction and positive feedback'
+					},
+					{ 
+						name: 'Surprised Reaction', 
+						scenario: 'When unexpected results occur',
+						icon: '😲',
+						description: 'Expresses surprise or amazement'
+					},
+					{ 
+						name: 'Celebration', 
+						scenario: 'When user achieves something',
+						icon: '🎉',
+						description: 'Celebrates achievements and milestones'
+					},
+					{ 
+						name: 'Helpful Assistant', 
+						scenario: 'When offering assistance',
+						icon: '🤝',
+						description: 'Shows willingness to help'
+					},
+					{ 
+						name: 'Excited Announcement', 
+						scenario: 'When announcing new features',
+						icon: '🚀',
+						description: 'Expresses excitement about updates'
+					},
+					{ 
+						name: 'Thinking Process', 
+						scenario: 'When processing complex requests',
+						icon: '🤔',
+						description: 'Shows the AI is working on a solution'
+					},
+					{ 
+						name: 'Confused State', 
+						scenario: 'When clarification is needed',
+						icon: '😕',
+						description: 'Indicates need for more information'
+					},
+					{ 
+						name: 'Grateful Response', 
+						scenario: 'When thanking the user',
+						icon: '🙏',
+						description: 'Expresses gratitude and appreciation'
+					}
+				].map((sticker, i) => (
+					<div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-indigo-200" data-sticker-id={i}>
+						<div class="flex items-start space-x-4">
+							<!-- Sticker Preview -->
+							<div class="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform duration-200">
+								<img src="/dummy-sticker.webp" alt={sticker.name} class="w-16 h-16 rounded-lg hover:scale-105 transition-transform duration-200" />
+							</div>
+							
+							<!-- Sticker Metadata -->
+							<div class="flex-1 space-y-3">
+								<div>
+									<div class="flex items-center space-x-2 mb-1">
+										<span class="text-lg">{sticker.icon}</span>
+										<h4 class="font-semibold text-gray-800">{sticker.name}</h4>
+									</div>
+									<p class="text-sm text-gray-600 mb-2">{sticker.description}</p>
+								</div>
+								
+								<!-- Usage Scenario -->
+								<div class="bg-gray-50 rounded-lg p-3">
+									<div class="text-xs font-medium text-gray-500 mb-1">USED WHEN:</div>
+									<div class="text-sm text-gray-700">{sticker.scenario}</div>
+								</div>
+								
+								<!-- Actions -->
+								<div class="flex gap-2">
+									<Button variant="outline" size="sm" class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 regenerate-sticker" data-sticker-id={i}>
+										<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+										</svg>
+										Regenerate
+									</Button>
+									<Button variant="outline" size="sm" class="flex-1 modify-sticker" data-sticker-id={i}>
+										<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+										</svg>
+										Modify
+									</Button>
+									<Button variant="outline" size="sm" class="flex-1 text-red-600 hover:text-red-700 delete-sticker" data-sticker-id={i}>
+										<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+										</svg>
+										Delete
+									</Button>
+								</div>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	</CardContent>
+</Card>
+
+<!-- Add Sticker Modal -->
+<div id="addStickerModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center z-[9999]">
+	<div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+		<div class="flex items-center justify-between mb-6">
+			<h3 class="text-2xl font-bold text-gray-800">Add New Sticker</h3>
+			<button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+				</svg>
+			</button>
+		</div>
+		
+		<form class="space-y-6" id="addStickerForm">
+			<!-- Sticker Title -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Sticker Title *</label>
+				<input 
+					type="text" 
+					placeholder="e.g., Happy Response, Celebration, Helpful Assistant..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
+					required
+					id="stickerTitle"
+				/>
+			</div>
+			
+			<!-- Scenario -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">When should this sticker be used? *</label>
+				<textarea 
+					placeholder="e.g., When user is satisfied with the result, When announcing new features, When offering assistance..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-20 resize-none hover:border-gray-300"
+					required
+					id="stickerScenario"
+				></textarea>
+			</div>
+			
+			<!-- Additional Notes -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Additional Notes (Optional)</label>
+				<textarea 
+					placeholder="Any specific details about how this sticker should look or behave..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-16 resize-none hover:border-gray-300"
+					id="stickerNotes"
+				></textarea>
+			</div>
+			
+			<!-- Action Buttons -->
+			<div class="flex gap-3 pt-4">
+				<Button type="button" variant="outline" class="flex-1" id="cancelBtn">
+					Cancel
+				</Button>
+				<Button type="submit" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+					</svg>
+					Generate Sticker
+				</Button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', function() {
+		const modal = document.getElementById('addStickerModal');
+		const addBtn = document.getElementById('addStickerBtn');
+		const closeBtn = document.getElementById('closeModalBtn');
+		const cancelBtn = document.getElementById('cancelBtn');
+		const form = document.getElementById('addStickerForm');
+		
+		function openModal() {
+			if (modal) {
+				modal.classList.remove('hidden');
+				modal.classList.add('flex');
+				document.body.style.overflow = 'hidden';
+				// Animate modal in
+				setTimeout(() => {
+					const modalContent = document.getElementById('modalContent');
+					if (modalContent) {
+						modalContent.classList.remove('scale-95', 'opacity-0');
+						modalContent.classList.add('scale-100', 'opacity-100');
+					}
+				}, 10);
+			}
+		}
+		
+		function closeModal() {
+			if (modal) {
+				// Animate modal out
+				const modalContent = document.getElementById('modalContent');
+				if (modalContent) {
+					modalContent.classList.remove('scale-100', 'opacity-100');
+					modalContent.classList.add('scale-95', 'opacity-0');
+				}
+				// Close after animation
+				setTimeout(() => {
+					modal.classList.add('hidden');
+					modal.classList.remove('flex');
+					document.body.style.overflow = 'auto';
+					// Clear form
+					const titleInput = document.getElementById('stickerTitle');
+					const scenarioInput = document.getElementById('stickerScenario');
+					const notesInput = document.getElementById('stickerNotes');
+					if (titleInput) titleInput.value = '';
+					if (scenarioInput) scenarioInput.value = '';
+					if (notesInput) notesInput.value = '';
+				}, 300);
+			}
+		}
+		
+		function handleSubmit(event) {
+			event.preventDefault();
+			
+			const title = document.getElementById('stickerTitle')?.value;
+			const scenario = document.getElementById('stickerScenario')?.value;
+			const notes = document.getElementById('stickerNotes')?.value;
+			
+			// Here you would typically send this data to your backend
+			console.log('Adding sticker:', { title, scenario, notes });
+			
+			// For now, just close the modal
+			closeModal();
+		}
+		
+		// Event listeners
+		if (addBtn) {
+			addBtn.addEventListener('click', openModal);
+		}
+		
+		if (closeBtn) {
+			closeBtn.addEventListener('click', closeModal);
+		}
+		
+		if (cancelBtn) {
+			cancelBtn.addEventListener('click', closeModal);
+		}
+		
+		if (form) {
+			form.addEventListener('submit', handleSubmit);
+		}
+		
+		// Close modal when clicking outside
+		if (modal) {
+			modal.addEventListener('click', function(e) {
+				if (e.target === modal) {
+					closeModal();
+				}
+			});
+		}
+
+		// Regenerate all button
+		const regenerateAllBtn = document.getElementById('regenerateAll');
+		if (regenerateAllBtn) {
+			regenerateAllBtn.addEventListener('click', function() {
+				this.innerHTML = `
+					<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Regenerating All...
+				`;
+				
+				setTimeout(() => {
+					this.innerHTML = `
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+						</svg>
+						Regenerate All
+					`;
+				}, 3000);
+			});
+		}
+
+		// Individual regenerate buttons
+		const regenerateButtons = document.querySelectorAll('.regenerate-sticker');
+		regenerateButtons.forEach(button => {
+			button.addEventListener('click', function() {
+				const stickerId = this.dataset.stickerId;
+				this.innerHTML = `
+					<svg class="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Regenerating...
+				`;
+				
+				setTimeout(() => {
+					this.innerHTML = `
+						<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+						</svg>
+						Regenerate
+					`;
+				}, 2000);
+			});
+		});
+
+		// Preview in chat button
+		const previewBtn = document.getElementById('previewInChat');
+		if (previewBtn) {
+			previewBtn.addEventListener('click', function() {
+				window.location.href = '/chat';
+			});
+		}
+	});
+</script>

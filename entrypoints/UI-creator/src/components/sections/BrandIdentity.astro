@@ -1,0 +1,189 @@
+---
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+---
+
+<Card class="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+	<CardHeader class="pb-4">
+		<div class="flex items-center space-x-3">
+			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
+			<h2 class="text-2xl font-bold text-gray-800">Brand Identity</h2>
+		</div>
+		<p class="text-gray-600 mt-2">Tell us about your brand so we can create stickers that truly represent your identity</p>
+	</CardHeader>
+	<CardContent class="space-y-8">
+		<!-- Basic Information -->
+		<div class="grid md:grid-cols-2 gap-6">
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Business Name *</label>
+				<input 
+					type="text" 
+					placeholder="e.g., TechCorp Inc." 
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
+					value="TechCorp Inc."
+					id="businessName"
+				/>
+			</div>
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Industry *</label>
+				<select class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300" id="industry">
+					<option>Technology</option>
+					<option>Healthcare</option>
+					<option>Finance</option>
+					<option>Education</option>
+					<option>Retail</option>
+					<option>E-commerce</option>
+					<option>Consulting</option>
+					<option>Other</option>
+				</select>
+			</div>
+		</div>
+
+		<!-- Brand Description -->
+		<div class="space-y-2">
+			<label class="text-sm font-medium text-gray-700">What does your business do? *</label>
+			<textarea 
+				placeholder="Describe your product or service in 2-3 sentences. This helps us understand your brand better..."
+				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
+				id="businessDescription"
+			>TechCorp Inc. develops innovative software solutions for small businesses, helping them streamline operations and increase productivity through cutting-edge technology.</textarea>
+		</div>
+
+		<!-- Brand Personality -->
+		<div class="space-y-4">
+			<label class="text-sm font-medium text-gray-700">Brand Personality *</label>
+			<p class="text-sm text-gray-500">Select 3-5 traits that best describe your brand's personality</p>
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="personalityTraits">
+				{[
+					{ name: 'Friendly', icon: '😊', selected: true },
+					{ name: 'Professional', icon: '👔', selected: true },
+					{ name: 'Helpful', icon: '🤝', selected: true },
+					{ name: 'Innovative', icon: '💡', selected: false },
+					{ name: 'Trustworthy', icon: '🛡️', selected: false },
+					{ name: 'Creative', icon: '🎨', selected: false },
+					{ name: 'Energetic', icon: '⚡', selected: false },
+					{ name: 'Reliable', icon: '🔒', selected: false }
+				].map((trait) => (
+					<button 
+						class={`p-3 rounded-lg border-2 transition-all text-left hover:scale-105 transform ${
+							trait.selected 
+								? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' 
+								: 'border-gray-200 hover:border-gray-300 text-gray-600 hover:shadow-sm'
+						}`}
+						data-trait={trait.name}
+					>
+						<div class="text-lg mb-1">{trait.icon}</div>
+						<div class="text-sm font-medium">{trait.name}</div>
+					</button>
+				))}
+			</div>
+		</div>
+
+		<!-- Preferred Colors -->
+		<div class="space-y-4">
+			<label class="text-sm font-medium text-gray-700">Preferred Colors</label>
+			<p class="text-sm text-gray-500">Choose colors that represent your brand (optional)</p>
+			<div class="flex flex-wrap gap-3" id="colorSelection">
+				{[
+					{ name: 'Blue', color: 'bg-blue-500', selected: true },
+					{ name: 'Purple', color: 'bg-purple-500', selected: true },
+					{ name: 'Green', color: 'bg-green-500', selected: false },
+					{ name: 'Orange', color: 'bg-orange-500', selected: false },
+					{ name: 'Red', color: 'bg-red-500', selected: false },
+					{ name: 'Pink', color: 'bg-pink-500', selected: false },
+					{ name: 'Yellow', color: 'bg-yellow-500', selected: false },
+					{ name: 'Gray', color: 'bg-gray-500', selected: false }
+				].map((color) => (
+					<button 
+						class={`w-12 h-12 rounded-full border-4 transition-all hover:scale-110 transform ${
+							color.selected ? 'border-gray-800 scale-110 shadow-lg' : 'border-gray-200 hover:border-gray-400 hover:shadow-md'
+						} ${color.color}`} 
+						title={color.name}
+						data-color={color.name}
+					></button>
+				))}
+			</div>
+		</div>
+
+		<!-- Target Audience -->
+		<div class="space-y-2">
+			<label class="text-sm font-medium text-gray-700">Who will use these stickers?</label>
+			<input 
+				type="text" 
+				placeholder="e.g., Our customers, internal team, partners..."
+				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
+				value="Our customers and internal team"
+				id="targetAudience"
+			/>
+		</div>
+	</CardContent>
+	<CardFooter class="pt-8">
+		<div class="flex justify-center">
+			<button 
+				class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
+				id="saveBrandIdentity"
+			>
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+				</svg>
+				Save Brand Identity
+			</button>
+		</div>
+	</CardFooter>
+</Card>
+
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Personality traits selection
+		const traitButtons = document.querySelectorAll('[data-trait]');
+		traitButtons.forEach(button => {
+			button.addEventListener('click', function() {
+				const isSelected = this.classList.contains('border-indigo-500');
+				const selectedCount = document.querySelectorAll('[data-trait].border-indigo-500').length;
+				
+				if (isSelected || selectedCount < 5) {
+					this.classList.toggle('border-indigo-500');
+					this.classList.toggle('bg-indigo-50');
+					this.classList.toggle('text-indigo-700');
+					this.classList.toggle('shadow-md');
+					this.classList.toggle('border-gray-200');
+					this.classList.toggle('text-gray-600');
+				}
+			});
+		});
+
+		// Color selection
+		const colorButtons = document.querySelectorAll('[data-color]');
+		colorButtons.forEach(button => {
+			button.addEventListener('click', function() {
+				this.classList.toggle('border-gray-800');
+				this.classList.toggle('scale-110');
+				this.classList.toggle('shadow-lg');
+				this.classList.toggle('border-gray-200');
+			});
+		});
+
+		// Save button
+		const saveButton = document.getElementById('saveBrandIdentity');
+		if (saveButton) {
+			saveButton.addEventListener('click', function() {
+				// Get form data
+				const formData = {
+					businessName: document.getElementById('businessName')?.value,
+					industry: document.getElementById('industry')?.value,
+					businessDescription: document.getElementById('businessDescription')?.value,
+					targetAudience: document.getElementById('targetAudience')?.value,
+					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait),
+					selectedColors: Array.from(document.querySelectorAll('[data-color].border-gray-800')).map(btn => btn.dataset.color)
+				};
+				
+				// Store in session storage
+				sessionStorage.setItem('brandIdentity', JSON.stringify(formData));
+				
+				// Emit custom event to move to next step
+				window.dispatchEvent(new CustomEvent('stepCompleted', { 
+					detail: { step: 'brandIdentity', data: formData } 
+				}));
+			});
+		}
+	});
+</script>
