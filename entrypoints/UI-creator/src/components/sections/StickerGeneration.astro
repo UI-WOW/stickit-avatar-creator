@@ -351,7 +351,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		const previewBtn = document.getElementById('previewInChat');
 		if (previewBtn) {
 			previewBtn.addEventListener('click', function() {
-				window.location.href = '/chat';
+				// Instead of redirecting, emit event to move to next step
+				window.dispatchEvent(new CustomEvent('stepCompleted', { 
+					detail: { step: 'stickerGeneration', data: { completed: true } } 
+				}));
 			});
 		}
 	});

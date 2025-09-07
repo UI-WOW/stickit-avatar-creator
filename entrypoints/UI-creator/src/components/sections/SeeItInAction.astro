@@ -1,0 +1,379 @@
+---
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+---
+
+<Card class="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+	<CardHeader class="pb-4">
+		<div class="flex items-center space-x-3">
+			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">4</div>
+			<h2 class="text-2xl font-bold text-gray-800">See It In Action</h2>
+		</div>
+		<p class="text-gray-600 mt-2">Experience how your custom stickers come to life in real conversations</p>
+	</CardHeader>
+	<CardContent class="space-y-8">
+		<!-- Chat Demo Section -->
+		<div class="text-center mb-6">
+			<h3 class="text-lg font-semibold text-gray-800 mb-2">Live Chat Demo</h3>
+			<p class="text-sm text-gray-600">Try chatting with your AI assistant and see how it responds with your personalized stickers!</p>
+		</div>
+
+		<!-- Embedded Chat Interface -->
+		<div class="flex justify-center">
+			<div class="relative">
+				<!-- Desktop: Phone Frame -->
+				<div class="hidden md:block w-80 h-[600px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
+					<!-- Phone Screen -->
+					<div class="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+						<!-- Status Bar -->
+						<div class="h-8 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-between px-6 text-white text-xs font-medium">
+							<span>9:41</span>
+							<span>Sticker Chat</span>
+							<div class="flex items-center space-x-1">
+								<div class="w-4 h-2 bg-white rounded-sm"></div>
+								<div class="w-4 h-2 bg-white rounded-sm"></div>
+								<div class="w-4 h-2 bg-white rounded-sm"></div>
+							</div>
+						</div>
+						
+						<!-- Chat Header -->
+						<div class="h-16 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center px-4 text-white">
+							<div class="flex items-center space-x-3">
+								<div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+									<img src="/dummy-sticker.webp" alt="AI Assistant" class="w-8 h-8 rounded-lg" />
+								</div>
+								<div>
+									<h3 class="font-semibold" id="assistant-name">Tech Assistant</h3>
+									<p class="text-xs text-white/80">Online</p>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Chat Messages Area -->
+						<div class="h-[420px] overflow-y-auto p-4 space-y-4 bg-gray-50" id="chat-messages">
+							<!-- Welcome Message -->
+							<div class="flex items-start space-x-2">
+								<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+									<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+								</div>
+								<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+									<p class="text-sm text-gray-800">Hi! I'm your AI Assistant. How can I help you today? 🚀</p>
+								</div>
+							</div>
+							
+							<!-- Sticker Response Example -->
+							<div class="flex items-start space-x-2">
+								<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+									<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+								</div>
+								<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+									<p class="text-sm text-gray-800 mb-2">Great question! Let me show you something cool:</p>
+									<div class="flex justify-center">
+										<img src="/dummy-sticker.webp" alt="Sticker response" class="w-16 h-16 rounded-lg" />
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Input Area -->
+						<div class="h-16 bg-white border-t border-gray-200 flex items-center px-4 space-x-3">
+							<button class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+								<svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+								</svg>
+							</button>
+							<div class="flex-1 bg-gray-100 rounded-full px-4 py-2">
+								<input 
+									type="text" 
+									placeholder="Type a message..." 
+									class="w-full bg-transparent text-sm outline-none"
+									id="message-input"
+								/>
+							</div>
+							<button 
+								class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center hover:from-indigo-600 hover:to-purple-700 transition-all"
+								id="send-button"
+							>
+								<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16m0 0l-6-6m6 6l-6 6"></path>
+								</svg>
+							</button>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Mobile: Simplified Chat Interface -->
+				<div class="md:hidden w-full max-w-sm mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+					<!-- Chat Header -->
+					<div class="h-16 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center px-4 text-white">
+						<div class="flex items-center space-x-3">
+							<div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+								<img src="/dummy-sticker.webp" alt="AI Assistant" class="w-8 h-8 rounded-lg" />
+							</div>
+							<div>
+								<h3 class="font-semibold" id="assistant-name-mobile">Tech Assistant</h3>
+								<p class="text-xs text-white/80">Online</p>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Chat Messages Area -->
+					<div class="h-80 overflow-y-auto p-4 space-y-4 bg-gray-50" id="chat-messages-mobile">
+						<!-- Welcome Message -->
+						<div class="flex items-start space-x-2">
+							<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+								<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+							</div>
+							<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+								<p class="text-sm text-gray-800">Hi! I'm your AI Assistant. How can I help you today? 🚀</p>
+							</div>
+						</div>
+						
+						<!-- Sticker Response Example -->
+						<div class="flex items-start space-x-2">
+							<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+								<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+							</div>
+							<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+								<p class="text-sm text-gray-800 mb-2">Great question! Let me show you something cool:</p>
+								<div class="flex justify-center">
+									<img src="/dummy-sticker.webp" alt="Sticker response" class="w-16 h-16 rounded-lg" />
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Input Area -->
+					<div class="h-16 bg-white border-t border-gray-200 flex items-center px-4 space-x-3">
+						<div class="flex-1 bg-gray-100 rounded-full px-4 py-2">
+							<input 
+								type="text" 
+								placeholder="Type a message..." 
+								class="w-full bg-transparent text-sm outline-none"
+								id="message-input-mobile"
+							/>
+						</div>
+						<button 
+							class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center hover:from-indigo-600 hover:to-purple-700 transition-all"
+							id="send-button-mobile"
+						>
+							<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16m0 0l-6-6m6 6l-6 6"></path>
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Demo Features -->
+		<div class="grid md:grid-cols-3 gap-6 mt-8">
+			<div class="text-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl">
+				<div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+					</svg>
+				</div>
+				<h4 class="font-semibold text-gray-800 mb-2">Real-time Responses</h4>
+				<p class="text-sm text-gray-600">See how your AI assistant uses stickers to enhance conversations</p>
+			</div>
+			
+			<div class="text-center p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-xl">
+				<div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+					</svg>
+				</div>
+				<h4 class="font-semibold text-gray-800 mb-2">Personalized Experience</h4>
+				<p class="text-sm text-gray-600">Your brand personality and avatar design come to life</p>
+			</div>
+			
+			<div class="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+				<div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
+					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+					</svg>
+				</div>
+				<h4 class="font-semibold text-gray-800 mb-2">Smart Context</h4>
+				<p class="text-sm text-gray-600">Stickers appear based on conversation context and mood</p>
+			</div>
+		</div>
+	</CardContent>
+</Card>
+
+<!-- Action Buttons Outside Card -->
+<div class="flex justify-between items-center mt-6">
+	<div class="flex gap-3">
+		<Button variant="outline" class="px-6 py-3">
+			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+			</svg>
+			Download Collection
+		</Button>
+		<Button variant="outline" class="px-6 py-3">
+			<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+			</svg>
+			Share Collection
+		</Button>
+	</div>
+
+</div>
+
+<script is:inline>
+	document.addEventListener('DOMContentLoaded', function() {
+		// Load saved data and update assistant name
+		const brandData = JSON.parse(sessionStorage.getItem('brandIdentity') || '{}');
+		const avatarData = JSON.parse(sessionStorage.getItem('avatarCreation') || '{}');
+		
+		// Update assistant name based on brand data
+		const assistantName = brandData.businessName || 'Tech Assistant';
+		document.getElementById('assistant-name').textContent = assistantName;
+		document.getElementById('assistant-name-mobile').textContent = assistantName;
+
+		// Chat functionality
+		const messageInput = document.getElementById('message-input');
+		const messageInputMobile = document.getElementById('message-input-mobile');
+		const sendButton = document.getElementById('send-button');
+		const sendButtonMobile = document.getElementById('send-button-mobile');
+		const chatMessages = document.getElementById('chat-messages');
+		const chatMessagesMobile = document.getElementById('chat-messages-mobile');
+
+		// Sample responses with stickers
+		const sampleResponses = [
+			{
+				text: "That's a great question! Let me help you with that 🤔",
+				hasSticker: true,
+				scenario: "thinking"
+			},
+			{
+				text: "Perfect! I'm so excited to share this with you! 🚀",
+				hasSticker: true,
+				scenario: "excited"
+			},
+			{
+				text: "I'm here to help! Let's work through this together 🤝",
+				hasSticker: true,
+				scenario: "helpful"
+			},
+			{
+				text: "Congratulations! You did an amazing job! 🎉",
+				hasSticker: true,
+				scenario: "celebration"
+			},
+			{
+				text: "I understand your concern. Let me clarify that for you 😊",
+				hasSticker: true,
+				scenario: "happy"
+			}
+		];
+
+		function addMessage(message, isUser = false) {
+			const messageDiv = document.createElement('div');
+			messageDiv.className = `flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+			
+			if (isUser) {
+				messageDiv.innerHTML = `
+					<div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm max-w-[200px]">
+						<p class="text-sm text-white">${message}</p>
+					</div>
+				`;
+			} else {
+				messageDiv.innerHTML = `
+					<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+						<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+					</div>
+					<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+						<p class="text-sm text-gray-800">${message}</p>
+					</div>
+				`;
+			}
+			
+			chatMessages.appendChild(messageDiv);
+			chatMessagesMobile.appendChild(messageDiv.cloneNode(true));
+			chatMessages.scrollTop = chatMessages.scrollHeight;
+			chatMessagesMobile.scrollTop = chatMessagesMobile.scrollHeight;
+		}
+
+		function addStickerResponse(scenario) {
+			const responseDiv = document.createElement('div');
+			responseDiv.className = 'flex items-start space-x-2';
+			
+			responseDiv.innerHTML = `
+				<div class="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+					<img src="/dummy-sticker.webp" alt="AI" class="w-6 h-6 rounded" />
+				</div>
+				<div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[200px]">
+					<div class="flex justify-center">
+						<img src="/dummy-sticker.webp" alt="Sticker response" class="w-16 h-16 rounded-lg" />
+					</div>
+				</div>
+			`;
+			
+			chatMessages.appendChild(responseDiv);
+			chatMessagesMobile.appendChild(responseDiv.cloneNode(true));
+			chatMessages.scrollTop = chatMessages.scrollHeight;
+			chatMessagesMobile.scrollTop = chatMessagesMobile.scrollHeight;
+		}
+
+		function sendMessage(input, messagesContainer) {
+			const message = input.value.trim();
+			if (!message) return;
+			
+			// Add user message
+			addMessage(message, true);
+			input.value = '';
+			
+			// Simulate AI response
+			setTimeout(() => {
+				const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+				addMessage(randomResponse.text);
+				
+				// Add sticker response after a short delay
+				if (randomResponse.hasSticker) {
+					setTimeout(() => {
+						addStickerResponse(randomResponse.scenario);
+					}, 1000);
+				}
+			}, 1000);
+		}
+
+		// Event listeners for desktop
+		if (sendButton && messageInput) {
+			sendButton.addEventListener('click', () => sendMessage(messageInput, chatMessages));
+			messageInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					sendMessage(messageInput, chatMessages);
+				}
+			});
+		}
+
+		// Event listeners for mobile
+		if (sendButtonMobile && messageInputMobile) {
+			sendButtonMobile.addEventListener('click', () => sendMessage(messageInputMobile, chatMessagesMobile));
+			messageInputMobile.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					sendMessage(messageInputMobile, chatMessagesMobile);
+				}
+			});
+		}
+
+		// Complete creation button
+		const completeButton = document.getElementById('completeCreation');
+		if (completeButton) {
+			completeButton.addEventListener('click', function() {
+				// Store completion data
+				sessionStorage.setItem('creationCompleted', JSON.stringify({
+					timestamp: new Date().toISOString(),
+					brandData,
+					avatarData
+				}));
+				
+				// Emit custom event to move to completion
+				window.dispatchEvent(new CustomEvent('stepCompleted', { 
+					detail: { step: 'seeItInAction', data: { completed: true } } 
+				}));
+			});
+		}
+	});
+</script>
