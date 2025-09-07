@@ -112,7 +112,8 @@ app.get('/sticker-groups/:id', async (c) => {
   const groupId = c.req.param('id')
   const { group, configs } = await c.get('userKV').getGroupWithConfigs(uid, groupId)
   if (!group) return c.json({ error: 'not found' }, 404)
-  return c.json({ ...group, configs })
+  const latest = Array.isArray(configs) ? configs[0] : undefined
+  return c.json({ id: group.id, name: group.name, createdAt: group.createdAt, input: latest?.input || {} })
 })
 
 app.post('/sticker-groups/:id', async (c) => {
@@ -134,13 +135,14 @@ app.post('/sticker-groups/:id', async (c) => {
     if (!updated) return c.json({ error: 'not found' }, 404)
   }
 
-  // If input or imageUrls present, append a new config entry
+  // If input or imageUrls present, overwrite latest config (single-version)
   if (input || imageUrls) {
     await c.get('userKV').addConfig(uid, groupId, (input ?? {}), imageUrls)
   }
 
   const { group, configs } = await c.get('userKV').getGroupWithConfigs(uid, groupId)
-  return c.json({ ...group!, configs })
+  const latest = Array.isArray(configs) ? configs[0] : undefined
+  return c.json({ id: group!.id, name: group!.name, createdAt: group!.createdAt, input: latest?.input || {} })
 })
 
 // Deprecated: configs endpoints removed; use GET/POST /sticker-groups/:id instead

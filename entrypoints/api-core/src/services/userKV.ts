@@ -80,10 +80,10 @@ export class UserKV {
     input: GroupConfigInput,
     imageUrls?: string[]
   ): Promise<GroupConfig> {
-    const list = await this.listConfigs(kv, userId, groupId)
     const id = crypto.randomUUID()
     const item: GroupConfig = { id, groupId, input, imageUrls, createdAt: new Date().toISOString() }
-    await kv.put(this.groupConfigsKey(userId, groupId), JSON.stringify([item, ...list]))
+    // Store only the latest config (single-version mode)
+    await kv.put(this.groupConfigsKey(userId, groupId), JSON.stringify([item]))
     return item
   }
 

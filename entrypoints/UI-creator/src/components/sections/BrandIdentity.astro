@@ -103,56 +103,34 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		const params = new URLSearchParams(window.location.search);
 		const groupId = params.get('groupId');
 
-		// Loading state
-		const loadingEl = document.createElement('div');
-		loadingEl.id = 'brand-loading';
-		loadingEl.className = 'text-sm text-gray-500 my-2';
-		loadingEl.textContent = 'Loading...';
-		const header = document.querySelector('h2');
-		if (groupId && header && header.parentElement) header.parentElement.appendChild(loadingEl);
-
-		async function loadGroup() {
-			if (!groupId) return;
-			try {
-				const res = await fetch(`${API_BASE}/sticker-groups/${groupId}`, { credentials: 'include' });
-				if (!res.ok) return;
-				const data = await res.json();
-				// Populate inputs
-				const nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('stickerGroupName'));
-				if (nameEl && typeof data?.name === 'string') nameEl.value = data.name;
-				// If latest config has input, try to populate known fields
-				const latestCfg = Array.isArray(data?.configs) ? data.configs[0] : null;
-				const input = latestCfg?.input || {};
-				const bi = input.brandIdentity || {};
-				const avatarTypeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById('avatarType'));
-				if (avatarTypeEl && typeof bi.avatarType === 'string') avatarTypeEl.value = bi.avatarType;
-				const descEl = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('avatarDescription'));
-				if (descEl && typeof bi.avatarDescription === 'string') descEl.value = bi.avatarDescription;
-				// Personality traits
-				if (Array.isArray(bi.personalityTraits)) {
-					document.querySelectorAll('[data-trait]').forEach(btn => {
-						const el = btn instanceof HTMLElement ? btn : null;
-						const name = el?.dataset?.trait;
-						const selected = !!(name && bi.personalityTraits.includes(name));
-						if (el) {
-							el.classList.toggle('border-indigo-500', selected);
-							el.classList.toggle('bg-indigo-50', selected);
-							el.classList.toggle('text-indigo-700', selected);
-							el.classList.toggle('shadow-md', selected);
-							el.classList.toggle('border-gray-200', !selected);
-							el.classList.toggle('text-gray-600', !selected);
-						}
-					});
-				}
-			} catch (e) {
-				console.error('Failed to load group', e);
-			} finally {
-				const l = document.getElementById('brand-loading');
-				if (l) l.remove();
+		// Populate from centralized state after StickerCreator load
+		window.addEventListener('groupDataLoaded', () => {
+			const state = (window).stickitGroupState || {};
+			const nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('stickerGroupName'));
+			if (nameEl && typeof state?.name === 'string') nameEl.value = state.name;
+			const bi = state?.input?.brandIdentity || {};
+			const avatarTypeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById('avatarType'));
+			if (avatarTypeEl && typeof bi.avatarType === 'string') avatarTypeEl.value = bi.avatarType;
+			const descEl = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('avatarDescription'));
+			if (descEl && typeof bi.avatarDescription === 'string') descEl.value = bi.avatarDescription;
+			// Personality traits toggle
+			if (Array.isArray(bi.personalityTraits)) {
+				document.querySelectorAll('[data-trait]').forEach(btn => {
+					const el = btn && btn.tagName ? btn : null;
+					const tname = el?.dataset?.trait;
+					const selected = !!(tname && bi.personalityTraits.includes(tname));
+					if (el) {
+						el.classList.toggle('border-indigo-500', selected);
+						el.classList.toggle('bg-indigo-50', selected);
+						el.classList.toggle('text-indigo-700', selected);
+						el.classList.toggle('shadow-md', selected);
+						el.classList.toggle('border-gray-200', !selected);
+						el.classList.toggle('text-gray-600', !selected);
+					}
+				});
 			}
-		}
+		});
 
-		loadGroup();
 		// Personality traits selection
 		const traitButtons = document.querySelectorAll('[data-trait]');
 		traitButtons.forEach(button => {
@@ -185,29 +163,16 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait)
 				};
 				
-				// Save to backend if editing an existing group
-				if (groupId) {
-					try {
-						await fetch(`${API_BASE}/sticker-groups/${groupId}`, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							credentials: 'include',
-							body: JSON.stringify({
-								name: formData.collectionName,
-								input: {
-									brandIdentity: {
-										stickerGroupName: formData.collectionName,
-										avatarType: formData.avatarType,
-										avatarDescription: formData.avatarDescription,
-										personalityTraits: formData.personalityTraits
-									}
-								}
-							})
-						});
-					} catch (e) {
-						console.error('Failed to save group', e);
+				// Update centralized state and request unified save
+				window.dispatchEvent(new CustomEvent('sectionDataUpdated', { detail: {
+					name: formData.collectionName,
+					brandIdentity: {
+						avatarType: formData.avatarType,
+						avatarDescription: formData.avatarDescription,
+						personalityTraits: formData.personalityTraits
 					}
-				}
+				}}));
+				window.dispatchEvent(new CustomEvent('requestSave'));
 
 				// Store in session storage
 				sessionStorage.setItem('avatarIdentity', JSON.stringify(formData));

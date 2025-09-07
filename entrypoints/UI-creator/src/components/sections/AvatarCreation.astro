@@ -20,8 +20,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 			<textarea 
 				placeholder="e.g., A friendly tech-savvy sloth wearing glasses, or a professional robot with a warm smile, or a helpful wizard who loves solving problems..."
 				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
-				id="avatarDescription"
-			>A friendly tech-savvy sloth wearing glasses and a blue hoodie, who loves helping people with technology and always has a warm, encouraging smile.</textarea>
+				id="avatarCreationDescription"
+			></textarea>
 		</div>
 
 		<div class="grid md:grid-cols-2 gap-8 mt-8">
@@ -218,16 +218,12 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		}
 
 		// Save button
-		const envEl = document.getElementById('env-avatar');
-		const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || '';
-		const params = new URLSearchParams(window.location.search);
-		const groupId = params.get('groupId');
 		const saveButton = document.getElementById('saveAvatarDesign');
 		if (saveButton) {
 			saveButton.addEventListener('click', async function() {
 				// Get form data
 				const formData = {
-					avatarDescription: document.getElementById('avatarDescription')?.value,
+					avatarDescription: document.getElementById('avatarCreationDescription')?.value,
 					selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style,
 					colorPalette: {
 						primary: document.getElementById('color1')?.value,
@@ -236,28 +232,15 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 						neutral: document.getElementById('color4')?.value
 					}
 				};
-				
-				// Persist to backend if editing an existing group
-				if (groupId) {
-					try {
-						await fetch(`${API_BASE}/sticker-groups/${groupId}`, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							credentials: 'include',
-							body: JSON.stringify({
-								input: {
-									avatarCreation: {
-										description: formData.avatarDescription,
-										selectedStyle: formData.selectedStyle,
-										colorPalette: formData.colorPalette
-									}
-								}
-							})
-						});
-					} catch (e) {
-						console.error('Failed to save avatar design', e);
+				// Update centralized state and request unified save
+				window.dispatchEvent(new CustomEvent('sectionDataUpdated', { detail: {
+					avatarCreation: {
+						description: formData.avatarDescription,
+						selectedStyle: formData.selectedStyle,
+						colorPalette: formData.colorPalette
 					}
-				}
+				}}));
+				window.dispatchEvent(new CustomEvent('requestSave'));
 
 				// Store in session storage
 				sessionStorage.setItem('avatarCreation', JSON.stringify(formData));
@@ -279,6 +262,35 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				}));
 			});
 		}
+
+		// Populate from centralized state after StickerCreator load
+		window.addEventListener('groupDataLoaded', () => {
+			const state = (window).stickitGroupState || {};
+			const ac = state?.input?.avatarCreation || {};
+			const descEl = document.getElementById('avatarCreationDescription');
+			if (descEl instanceof HTMLTextAreaElement && typeof ac.description === 'string') descEl.value = ac.description;
+			// Style selection
+			const styleButtons = document.querySelectorAll('[data-style]');
+			if (typeof ac.selectedStyle === 'string') {
+				styleButtons.forEach(btn => {
+					btn.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'shadow-md');
+					btn.classList.add('border-gray-200', 'text-gray-600');
+					if (btn instanceof HTMLElement && btn.dataset.style === ac.selectedStyle) {
+						btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'shadow-md');
+						btn.classList.remove('border-gray-200', 'text-gray-600');
+					}
+				});
+			}
+			// Colors
+			const palette = ac.colorPalette || {};
+			const color1 = document.getElementById('color1');
+			const color2 = document.getElementById('color2');
+			const color3 = document.getElementById('color3');
+			const color4 = document.getElementById('color4');
+			if (color1 instanceof HTMLInputElement && typeof palette.primary === 'string') color1.value = palette.primary;
+			if (color2 instanceof HTMLInputElement && typeof palette.secondary === 'string') color2.value = palette.secondary;
+			if (color3 instanceof HTMLInputElement && typeof palette.accent === 'string') color3.value = palette.accent;
+			if (color4 instanceof HTMLInputElement && typeof palette.neutral === 'string') color4.value = palette.neutral;
+		});
 	});
 </script>
-<div id="env-avatar" data-api-base={API_BASE} class="hidden"></div>
