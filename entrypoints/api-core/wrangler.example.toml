@@ -1,0 +1,22 @@
+# Example wrangler.toml configuration
+# Copy this to wrangler.toml and update the values
+
+name = "stickit-avatar-creator-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Environment variables
+[vars]
+PNG_TO_STICKER_URL = "http://localhost:8003"
+
+# R2 Buckets
+[[r2_buckets]]
+binding = "GENERAL_STORAGE_STICKIT_AVATAR_CREATOR"
+bucket_name = "general-storage-stickit-avatar-creator"
+
+[[r2_buckets]]
+binding = "LOGGER_STORAGE_STICKIT_AVATAR_CREATOR"
+bucket_name = "logger-storage-stickit-avatar-creator"
+
+# Secrets (set these with: wrangler secret put SECRET_NAME)
+# GEMINI_API_KEY = "your-gemini-api-key-here"

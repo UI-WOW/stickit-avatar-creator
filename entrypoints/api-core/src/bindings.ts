@@ -1,4 +1,6 @@
 export type Bindings = {
     GENERAL_STORAGE_STICKIT_AVATAR_CREATOR: R2Bucket
     LOGGER_STORAGE_STICKIT_AVATAR_CREATOR: R2Bucket
+    GEMINI_API_KEY: string
+    PNG_TO_STICKER_URL: string
 }
