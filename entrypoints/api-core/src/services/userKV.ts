@@ -35,6 +35,36 @@ export class UserKV {
     return item
   }
 
+  static async getGroupById(kv: KVNamespace, userId: string, groupId: string): Promise<StickerGroup | null> {
+    const list = await this.listGroups(kv, userId)
+    return list.find(g => g.id === groupId) ?? null
+  }
+
+  static async updateGroupName(kv: KVNamespace, userId: string, groupId: string, name: string): Promise<StickerGroup | null> {
+    const list = await this.listGroups(kv, userId)
+    let updated: StickerGroup | null = null
+    const next = list.map(item => {
+      if (item.id === groupId) {
+        updated = { ...item, name }
+        return updated
+      }
+      return item
+    })
+    if (!updated) return null
+    await kv.put(this.userGroupsKey(userId), JSON.stringify(next))
+    return updated
+  }
+
+  static async getGroupWithConfigs(
+    kv: KVNamespace,
+    userId: string,
+    groupId: string
+  ): Promise<{ group: StickerGroup | null, configs: GroupConfig[] }> {
+    const group = await this.getGroupById(kv, userId, groupId)
+    const configs = await this.listConfigs(kv, userId, groupId)
+    return { group, configs }
+  }
+
   static async listConfigs(kv: KVNamespace, userId: string, groupId: string): Promise<GroupConfig[]> {
     const raw = await kv.get(this.groupConfigsKey(userId, groupId))
     if (!raw) return []
@@ -92,6 +122,18 @@ export class UserKVProvider {
 
   deleteGroup(userId: string, groupId: string) {
     return UserKV.deleteGroup(this.kv, userId, groupId)
+  }
+
+  getGroupWithConfigs(userId: string, groupId: string) {
+    return UserKV.getGroupWithConfigs(this.kv, userId, groupId)
+  }
+
+  getGroupById(userId: string, groupId: string) {
+    return UserKV.getGroupById(this.kv, userId, groupId)
+  }
+
+  updateGroupName(userId: string, groupId: string, name: string) {
+    return UserKV.updateGroupName(this.kv, userId, groupId, name)
   }
 }
 

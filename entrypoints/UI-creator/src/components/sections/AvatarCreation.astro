@@ -1,6 +1,7 @@
 ---
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 ---
 
 <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
@@ -217,9 +218,13 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 		}
 
 		// Save button
+		const envEl = document.getElementById('env-avatar');
+		const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || '';
+		const params = new URLSearchParams(window.location.search);
+		const groupId = params.get('groupId');
 		const saveButton = document.getElementById('saveAvatarDesign');
 		if (saveButton) {
-			saveButton.addEventListener('click', function() {
+			saveButton.addEventListener('click', async function() {
 				// Get form data
 				const formData = {
 					avatarDescription: document.getElementById('avatarDescription')?.value,
@@ -232,6 +237,28 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 					}
 				};
 				
+				// Persist to backend if editing an existing group
+				if (groupId) {
+					try {
+						await fetch(`${API_BASE}/sticker-groups/${groupId}`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							credentials: 'include',
+							body: JSON.stringify({
+								input: {
+									avatarCreation: {
+										description: formData.avatarDescription,
+										selectedStyle: formData.selectedStyle,
+										colorPalette: formData.colorPalette
+									}
+								}
+							})
+						});
+					} catch (e) {
+						console.error('Failed to save avatar design', e);
+					}
+				}
+
 				// Store in session storage
 				sessionStorage.setItem('avatarCreation', JSON.stringify(formData));
 				
@@ -254,3 +281,4 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 		}
 	});
 </script>
+<div id="env-avatar" data-api-base={API_BASE} class="hidden"></div>

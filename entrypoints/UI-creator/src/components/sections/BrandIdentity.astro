@@ -1,26 +1,26 @@
 ---
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 ---
 
-<Card class="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
-	<CardHeader class="pb-4">
+<Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+	<CardHeader className="pb-4">
 		<div class="flex items-center space-x-3">
 			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
 			<h2 class="text-2xl font-bold text-gray-800">Avatar Identity</h2>
 		</div>
 		<p class="text-gray-600 mt-2">Define your avatar's personality so we can create stickers that truly represent your character</p>
 	</CardHeader>
-	<CardContent class="space-y-8">
+	<CardContent className="space-y-8">
 		<!-- Basic Information -->
 		<div class="grid md:grid-cols-2 gap-6">
 			<div class="space-y-2">
-				<label class="text-sm font-medium text-black-700">Collection Name *</label>
+				<label class="text-sm font-medium text-black-700">Sticker Group Name *</label>
 				<input 
 					type="text" 
-					placeholder="e.g., My Tech Assistant" 
+					placeholder="e.g., My Sticker Group" 
 					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
-					value="My Tech Assistant"
-					id="collectionName"
+					id="stickerGroupName"
 				/>
 			</div>
 			<div class="space-y-2">
@@ -98,6 +98,49 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 
 <script is:inline>
 	document.addEventListener('DOMContentLoaded', function() {
+		const envEl = document.getElementById('env-brand');
+		const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || '';
+		const params = new URLSearchParams(window.location.search);
+		const groupId = params.get('groupId');
+
+		async function loadGroup() {
+			if (!groupId) return;
+			try {
+				const res = await fetch(`${API_BASE}/sticker-groups/${groupId}`, { credentials: 'include' });
+				if (!res.ok) return;
+				const data = await res.json();
+				// Populate inputs
+				const nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('stickerGroupName'));
+				if (nameEl && typeof data?.name === 'string') nameEl.value = data.name;
+				// If latest config has input, try to populate known fields
+				const latestCfg = Array.isArray(data?.configs) ? data.configs[0] : null;
+				const input = latestCfg?.input || {};
+				const avatarTypeEl = /** @type {HTMLSelectElement|null} */ (document.getElementById('avatarType'));
+				if (avatarTypeEl && typeof input.avatarType === 'string') avatarTypeEl.value = input.avatarType;
+				const descEl = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('avatarDescription'));
+				if (descEl && typeof input.avatarDescription === 'string') descEl.value = input.avatarDescription;
+				// Personality traits
+				if (Array.isArray(input.personalityTraits)) {
+					document.querySelectorAll('[data-trait]').forEach(btn => {
+						const el = btn instanceof HTMLElement ? btn : null;
+						const name = el?.dataset?.trait;
+						const selected = !!(name && input.personalityTraits.includes(name));
+						if (el) {
+							el.classList.toggle('border-indigo-500', selected);
+							el.classList.toggle('bg-indigo-50', selected);
+							el.classList.toggle('text-indigo-700', selected);
+							el.classList.toggle('shadow-md', selected);
+							el.classList.toggle('border-gray-200', !selected);
+							el.classList.toggle('text-gray-600', !selected);
+						}
+					});
+				}
+			} catch (e) {
+				console.error('Failed to load group', e);
+			}
+		}
+
+		loadGroup();
 		// Personality traits selection
 		const traitButtons = document.querySelectorAll('[data-trait]');
 		traitButtons.forEach(button => {
@@ -120,16 +163,37 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 		// Save button
 		const saveButton = document.getElementById('saveBrandIdentity');
 		if (saveButton) {
-			saveButton.addEventListener('click', function() {
+			saveButton.addEventListener('click', async function() {
 				// Get form data
 				const formData = {
-					collectionName: document.getElementById('collectionName')?.value,
+					collectionName: document.getElementById('stickerGroupName')?.value,
 					avatarType: document.getElementById('avatarType')?.value,
 					avatarDescription: document.getElementById('avatarDescription')?.value,
 					targetAudience: document.getElementById('targetAudience')?.value,
 					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait)
 				};
 				
+				// Save to backend if editing an existing group
+				if (groupId) {
+					try {
+						await fetch(`${API_BASE}/sticker-groups/${groupId}`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							credentials: 'include',
+							body: JSON.stringify({
+								name: formData.collectionName,
+								input: {
+									avatarType: formData.avatarType,
+									avatarDescription: formData.avatarDescription,
+									personalityTraits: formData.personalityTraits
+								}
+							})
+						});
+					} catch (e) {
+						console.error('Failed to save group', e);
+					}
+				}
+
 				// Store in session storage
 				sessionStorage.setItem('avatarIdentity', JSON.stringify(formData));
 				
@@ -141,3 +205,4 @@ import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 		}
 	});
 </script>
+<div id="env-brand" data-api-base={API_BASE} class="hidden"></div>
