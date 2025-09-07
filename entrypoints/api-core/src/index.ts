@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 import { Bindings } from './bindings.js'
 import { createRequestLoggerMiddleware } from './middleware/requestLogger.js'
 import { GoogleGenAI } from "@google/genai";
@@ -140,9 +139,9 @@ app.get('/get-image-test', async (c) => {
 
 app.get('/generate-sticker', async (c) => {
   try {
-    const filename = c.req.query('filename')
-    if (!filename) {
-      return c.json({ error: 'filename parameter is required' }, 400)
+    const imageUrl = c.req.query('imageUrl')
+    if (!imageUrl) {
+      return c.json({ error: 'imageUrl parameter is required' }, 400)
     }
     
     // Check if Python service URL is configured
@@ -154,30 +153,13 @@ app.get('/generate-sticker', async (c) => {
       }, 500)
     }
     
-    const image = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(filename)
-    if (!image) {
-      return c.json({ error: 'Image not found', filename }, 404)
-    }
-    
-    const imageBuffer = await image.arrayBuffer()
-    
-    // Process the image using Python service
-    const processedImageBuffer = await StickerService.processImageForSticker(
-      imageBuffer, 
-      filename,
+    // Process the image using Python service by URL and proxy the response directly
+    const pythonResponse = await StickerService.processImageFromUrl(
+      imageUrl,
       pythonServiceUrl
     )
     
-    // Generate output filename
-    const outputFilename = filename.replace(/\.[^/.]+$/, '') + '-sticker.webp'
-    
-    // Return the processed image directly
-    return new Response(processedImageBuffer, {
-      headers: { 
-        'Content-Type': 'image/webp',
-        'Content-Disposition': `inline; filename="${outputFilename}"`
-      }
-    })
+    return pythonResponse
     
   } catch (error) {
     console.error('Error in generate-sticker:', error)

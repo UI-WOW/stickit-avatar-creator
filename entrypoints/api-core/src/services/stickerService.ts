@@ -1,143 +1,37 @@
-/**
- * Sticker generation service
- */
-
-export interface StickerGenerationResult {
-  success: boolean;
-  message: string;
-  originalFilename: string;
-  stickerFilename: string;
-  size: number;
-}
-
-export interface StickerGenerationError {
-  error: string;
-  details: string;
-}
-
 export class StickerService {
   /**
-   * Process image for sticker generation using Python service (returns processed image buffer)
+   * Process image for sticker generation by passing a public URL to Python service
    */
-  static async processImageForSticker(
-    imageBuffer: ArrayBuffer,
-    originalFilename: string,
+  static async processImageFromUrl(
+    imageUrl: string,
     pythonServiceUrl: string
-  ): Promise<ArrayBuffer> {
+  ): Promise<Response> {
     try {
-      console.log(`Calling Python service at: ${pythonServiceUrl}/create-whatsapp-sticker`);
-      console.log(`Image buffer size: ${imageBuffer.byteLength} bytes`);
-      console.log(`Filename: ${originalFilename}`);
-      
-      // Debug: Check the first few bytes to verify it's a PNG
-      const bytes = new Uint8Array(imageBuffer.slice(0, 8));
-      console.log(`First 8 bytes: ${Array.from(bytes).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')}`);
-      
-      // Prepare form data for Python service
+      console.log(`Calling Python service (URL) at: ${pythonServiceUrl}/create-whatsapp-sticker`);
+      console.log(`Image URL: ${imageUrl}`);
+
       const formData = new FormData();
-      
-      // Create a proper file blob with correct MIME type
-      const fileBlob = new Blob([imageBuffer], { 
-        type: 'image/png' // Set the correct MIME type
-      });
-      
-      formData.append('file', fileBlob, originalFilename);
-      // formData.append('white_threshold', '255');
-      // formData.append('output_size', '512');
-      // formData.append('quality', '90');
-      
-      // Call Python service for WhatsApp-compatible stickers
+      formData.append('image_url', imageUrl);
+
       const response = await fetch(`${pythonServiceUrl}/create-whatsapp-sticker`, {
         method: 'POST',
         body: formData
       });
-      
-      console.log(`Python service response status: ${response.status}`);
-      console.log(`Python service response headers:`, Object.fromEntries(response.headers.entries()));
-      
+
+      console.log(`Python service (URL) response status: ${response.status}`);
+      console.log(`Python service (URL) response headers:`, Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.log(`Python service error response: ${errorText}`);
+        console.log(`Python service (URL) error response: ${errorText}`);
         throw new Error(`Python service error: ${response.status} ${response.statusText} - ${errorText}`);
       }
-      
-      const processedImageBuffer = await response.arrayBuffer();
-      console.log(`Processed image buffer size: ${processedImageBuffer.byteLength} bytes`);
-      return processedImageBuffer;
-      
+
+      return response;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`Error in processImageForSticker: ${errorMessage}`);
-      throw new Error(`Failed to process image with Python service: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Generate a sticker from an existing image using Python service
-   */
-  static async generateSticker(
-    imageBuffer: ArrayBuffer,
-    originalFilename: string,
-    r2Bucket: R2Bucket,
-    pythonServiceUrl: string
-  ): Promise<StickerGenerationResult> {
-    try {
-      // Process the image using Python service
-      const processedImageBuffer = await this.processImageForSticker(
-        imageBuffer, 
-        originalFilename, 
-        pythonServiceUrl
-      );
-      
-      // Generate output filename
-      const outputFilename = this.generateStickerFilename(originalFilename);
-      
-      // Save to R2 bucket as WebP
-      await r2Bucket.put(outputFilename, processedImageBuffer, {
-        httpMetadata: {
-          contentType: 'image/webp'
-        }
-      });
-      
-      return {
-        success: true,
-        message: 'Sticker generated successfully using Python image processing service',
-        originalFilename,
-        stickerFilename: outputFilename,
-        size: processedImageBuffer.byteLength
-      };
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to generate sticker: ${errorMessage}`);
-    }
-  }
-
-  /**
-   * Generate a sticker filename from the original filename
-   */
-  private static generateStickerFilename(originalFilename: string): string {
-    const nameWithoutExtension = originalFilename.replace(/\.[^/.]+$/, '');
-    return `${nameWithoutExtension}-sticker.webp`;
-  }
-
-  /**
-   * Get content type based on file extension
-   */
-  private static getContentType(filename: string): string {
-    const extension = filename.toLowerCase().split('.').pop();
-    switch (extension) {
-      case 'png':
-        return 'image/png';
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      case 'webp':
-        return 'image/webp';
-      case 'gif':
-        return 'image/gif';
-      default:
-        return 'image/png'; // Default to PNG
+      console.error(`Error in processImageFromUrl: ${errorMessage}`);
+      throw new Error(`Failed to process image URL with Python service: ${errorMessage}`);
     }
   }
 

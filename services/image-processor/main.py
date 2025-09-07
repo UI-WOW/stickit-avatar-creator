@@ -3,13 +3,17 @@ Simple FastAPI service for image processing - PNG to WebP with background remova
 Runs on port 8003
 """
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import Response
 from PIL import Image
 import io
 import uvicorn
 import logging
 import numpy as np
+import httpx
+from typing import Optional
+import os
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -104,7 +108,8 @@ def remove_white_background(image: Image.Image, threshold: int = 240) -> Image.I
 
 @app.post("/create-whatsapp-sticker")
 async def create_whatsapp_sticker(
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
+    image_url: Optional[str] = Form(None),
     white_threshold: int = 240
 ):
     """
@@ -122,12 +127,26 @@ async def create_whatsapp_sticker(
         white_threshold: Threshold for white detection (0-255, default: 240 for aggressive removal)
     """
     try:
-        # Read image data first
-        image_data = await file.read()
-        logger.info(f"Creating WhatsApp sticker: {file.filename}, size: {len(image_data)} bytes")
+        # Obtain image data from either uploaded file or provided URL
+        image_data: bytes
+        src_desc = ""
+        if file is not None:
+            image_data = await file.read()
+            src_desc = f"file={file.filename}"
+        elif image_url:
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.get(image_url)
+                if resp.status_code != 200:
+                    raise HTTPException(status_code=400, detail=f"Failed to fetch image_url: HTTP {resp.status_code}")
+                image_data = resp.content
+                src_desc = f"url={image_url}"
+        else:
+            raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+
+        logger.info(f"Creating WhatsApp sticker from {src_desc}, size: {len(image_data)} bytes")
         
         # Validate file type
-        if not file.content_type or not file.content_type.startswith('image/'):
+        if file is not None and (not file.content_type or not file.content_type.startswith('image/')):
             if len(image_data) >= 8:
                 if image_data[:8] == b'\x89PNG\r\n\x1a\n':
                     logger.info("Detected PNG file from signature")
@@ -188,12 +207,20 @@ async def create_whatsapp_sticker(
         
         logger.info(f"Final WhatsApp sticker size: {len(output_data)} bytes")
         
+        # Derive a safe filename base from file or URL
+        if file is not None and getattr(file, 'filename', None):
+            base_name = file.filename
+        elif image_url:
+            base_name = os.path.basename(urlparse(image_url).path) or 'image'
+        else:
+            base_name = 'image'
+
         # Return WebP image with WhatsApp-specific headers
         return Response(
             content=output_data,
             media_type="image/webp",
             headers={
-                "Content-Disposition": f"attachment; filename=sticker-{file.filename or 'image'}.webp",
+                "Content-Disposition": f"attachment; filename=sticker-{base_name}.webp",
                 "X-Sticker-Type": "whatsapp",
                 "X-Sticker-Size": str(len(output_data)),
                 "X-Sticker-Dimensions": "512x512",
