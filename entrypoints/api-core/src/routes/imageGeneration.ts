@@ -181,31 +181,31 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
     console.log('🖼️ Avatar image request received');
     
     try {
-      const filename = c.req.query('filename')
-      
-      if (!filename) {
+    const filename = c.req.query('filename')
+    
+    if (!filename) {
         console.error('❌ No filename provided');
-        return c.json({ error: 'filename parameter is required' }, 400)
-      }
+      return c.json({ error: 'filename parameter is required' }, 400)
+    }
       
       console.log('📁 Requesting avatar image:', filename)
-      
-      const image = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(filename)
-      if (!image) {
+    
+    const image = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(filename)
+    if (!image) {
         console.error('❌ Avatar image not found in R2 storage:', filename)
         return c.json({ error: 'Avatar image not found', filename }, 404)
-      }
-      
+    }
+    
       console.log('✅ Avatar image found in R2 storage');
-      const arrayBuffer = await image.arrayBuffer()
-      const contentType = image.httpMetadata?.contentType || 'image/png'
+    const arrayBuffer = await image.arrayBuffer()
+    const contentType = image.httpMetadata?.contentType || 'image/png'
       
       const responseTime = Date.now() - startTime;
       console.log(`🎉 Avatar image served successfully in ${responseTime}ms (${arrayBuffer.byteLength} bytes)`);
-      
-      return new Response(arrayBuffer, {
-        headers: { 
-          'Content-Type': contentType,
+    
+    return new Response(arrayBuffer, {
+      headers: { 
+        'Content-Type': contentType,
           'Content-Disposition': `inline; filename="${filename}"`,
           'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
         }

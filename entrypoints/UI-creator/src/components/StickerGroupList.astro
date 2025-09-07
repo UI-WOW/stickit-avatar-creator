@@ -6,7 +6,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 <div id="collections-root" class="space-y-6">
     <div class="text-center text-gray-500" id="collections-loading">Loading your sticker groups...</div>
     <template id="sticker-card-template">
-        <StickerGroupCard groupName="__NAME__" stickerCount={5} id="__ID__" createdAt="__CREATED__" showDelete={true} />
+        <StickerGroupCard groupName="__NAME__" stickerCount={5} id="__ID__" createdAt="__CREATED__" showDelete={true} data-stickers="__STICKERS__" />
     </template>
 </div>
 
@@ -125,13 +125,89 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
             list.className = 'grid grid-cols-1 gap-4';
 
             for (const col of items) {
+                
+                // Fetch the actual sticker data for this group
+                let stickersData = '[]';
+                try {
+                    const groupRes = await fetch(`${API_BASE}/sticker-groups/${col.id}`, { credentials: 'include' });
+                    if (groupRes.ok) {
+                        const groupData = await groupRes.json();
+                        
+                        // Try different possible paths for stickers
+                        let stickers = [];
+                        
+                        // Path 1: input.stickerGeneration.stickers
+                        if (groupData.input?.stickerGeneration?.stickers) {
+                            stickers = groupData.input.stickerGeneration.stickers;
+                        }
+                        // Path 2: input.stickers (direct)
+                        else if (groupData.input?.stickers) {
+                            stickers = groupData.input.stickers;
+                        }
+                        
+                        stickersData = JSON.stringify(stickers);
+                } catch (err) {
+                    console.error('❌ Error fetching group data for:', col.id, err);
+                }
+                
                 const raw = (tpl?.innerHTML || '')
                     .replaceAll('__ID__', String(col.id ?? ''))
                     .replaceAll('__NAME__', String(col.name ?? 'Untitled'))
-                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()));
+                    .replaceAll('__CREATED__', String(col.createdAt ?? Date.now()))
+                    .replaceAll('__STICKERS__', stickersData);
                 const cardEl = htmlToElement(raw);
                 if (cardEl) {
                     bindDelete(cardEl, col.id, String(col.name ?? ''));
+                    
+                    // Parse and display stickers immediately
+                    try {
+                        const stickers = JSON.parse(stickersData);
+                        
+                        // Update sticker count
+                        const countElement = cardEl.querySelector('.sticker-count');
+                        if (countElement) {
+                            countElement.textContent = `${stickers.length} sticker${stickers.length !== 1 ? 's' : ''}`;
+                        }
+                        
+                        // Update sticker preview
+                        const previewContainer = cardEl.querySelector('.sticker-preview-container');
+                        if (previewContainer) {
+                            if (stickers.length === 0) {
+                                previewContainer.innerHTML = `
+                                    <div class="flex gap-3 flex-wrap py-2">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                                            <div class="w-14 h-14 bg-gray-300 rounded-lg flex items-center justify-center">
+                                                <span class="text-xs text-gray-500">Empty</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                const stickersToShow = stickers.slice(0, 6);
+                                const remainingCount = Math.max(0, stickers.length - 6);
+                                
+                                previewContainer.innerHTML = `
+                                    <div class="flex gap-3 flex-wrap py-2">
+                                        ${stickersToShow.map((sticker: any, i: number) => `
+                                            <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0">
+                                                ${sticker.url ? 
+                                                    `<img src="${sticker.url}" alt="${sticker.name || 'Sticker ' + (i + 1)}" class="w-14 h-14 rounded-lg" />` : 
+                                                    `<div class="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                                                        <span class="text-xs text-gray-500">No image</span>
+                                                    </div>`
+                                                }
+                                            </div>
+                                        `).join('')}
+                                        ${remainingCount > 0 ? `
+                                            <div class="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                                                <span class="text-xs font-medium text-indigo-600">+${remainingCount}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }
+                        }
+                    
                     list.appendChild(cardEl);
                 }
             }

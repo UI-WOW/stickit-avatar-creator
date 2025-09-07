@@ -11,14 +11,17 @@ interface Props {
 }
 
 const { groupName, stickerCount = 5, id, createdAt, showDelete = false } = Astro.props as Props;
+
+// We'll parse the stickers from the data attribute in the client-side script
+let parsedStickers: any[] = [];
 ---
 
-<Card className="w-full hover:shadow-lg transition-shadow duration-300">
+<Card className="w-full hover:shadow-lg transition-shadow duration-300" data-group-id={id}>
   <CardHeader className="">
     <div class="flex items-center justify-between">
       <div class="flex flex-col">
         <h3 class="text-xl font-semibold text-foreground">{groupName}</h3>
-
+        <p class="text-sm text-gray-500 sticker-count">Loading...</p>
       </div>
       <div class="flex gap-2 items-center">
         {showDelete && (
@@ -48,12 +51,10 @@ const { groupName, stickerCount = 5, id, createdAt, showDelete = false } = Astro
   
   <CardContent className="space-y-6">
     <!-- Sticker Preview -->
-    <div class="flex gap-3 flex-wrap py-2">
-      {Array.from({ length: stickerCount }).map((_, i) => (
-        <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center hover:scale-110 transition-transform duration-200 shadow-md flex-shrink-0">
-          <img src="/dummy-sticker.webp" alt={`Sticker ${i + 1}`} class="w-14 h-14 rounded-lg" />
-        </div>
-      ))}
+    <div class="sticker-preview-container">
+      <div class="flex items-center justify-center h-20 text-gray-400 text-sm">
+        Loading stickers...
+      </div>
     </div>
     
     <!-- Action Buttons -->
@@ -77,3 +78,4 @@ const { groupName, stickerCount = 5, id, createdAt, showDelete = false } = Astro
     </div>
   </CardContent>
 </Card>
+
