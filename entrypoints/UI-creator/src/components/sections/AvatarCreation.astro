@@ -218,24 +218,168 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 		// Regenerate avatar button
 		const regenerateBtn = document.getElementById('regenerateAvatar');
 		if (regenerateBtn) {
-			regenerateBtn.addEventListener('click', function() {
-				// Add loading state
+			regenerateBtn.addEventListener('click', async function() {
+				// Disable button and show loading state
+				this.disabled = true;
 				this.innerHTML = `
 					<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 					</svg>
-					Regenerating...
+					Generating Avatar...
 				`;
 				
-				// Simulate regeneration
-				setTimeout(() => {
+				try {
+					// Get current form data
+					const currentFormData = {
+						avatarDescription: document.getElementById('avatarCreationDescription')?.value,
+						selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style,
+						colorPalette: {
+							primary: document.getElementById('color1')?.value,
+							secondary: document.getElementById('color2')?.value,
+							accent: document.getElementById('color3')?.value,
+							neutral: document.getElementById('color4')?.value
+						},
+						referenceImages: uploadedImages
+					};
+
+					// Get centralized state for brand identity
+					const state = window.stickitGroupState || {};
+					const brandIdentity = state.input?.brandIdentity || {};
+					const avatarCreation = {
+						description: currentFormData.avatarDescription,
+						selectedStyle: currentFormData.selectedStyle,
+						colorPalette: currentFormData.colorPalette,
+						referenceImages: currentFormData.referenceImages
+					};
+
+					// Check if we have minimum required data
+					if (!brandIdentity.avatarDescription && !avatarCreation.description) {
+						throw new Error('Please provide at least a description of your avatar in either the Brand Identity or Avatar Creation section.');
+					}
+
+					// Get group ID from URL params
+					const params = new URLSearchParams(window.location.search);
+					const groupId = params.get('groupId');
+
+					// Prepare request payload
+					const payload = {
+						brandIdentity,
+						avatarCreation,
+						groupId
+					};
+
+					// Get API base URL
+					const envEl = document.getElementById('env-avatar');
+					const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || 'http://localhost:8002';
+
+					console.log('🚀 Sending avatar generation request to API...');
+
+					// Call the API
+					const response = await fetch(`${API_BASE}/generate-avatar`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						credentials: 'include',
+						body: JSON.stringify(payload)
+					});
+
+					if (!response.ok) {
+						const errorData = await response.json();
+						console.error('❌ API request failed:', errorData);
+						throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+					}
+
+					const result = await response.json();
+					console.log('✅ Avatar generation successful:', {
+						filename: result.filename,
+						size: result.size,
+						generationTime: result.generationTime
+					});
+
+					// Store the generated avatar data
+					generatedAvatar = {
+						filename: result.filename,
+						url: result.url,
+						size: result.size,
+						generationTime: result.generationTime,
+						generatedAt: new Date().toISOString()
+					};
+					console.log('💾 Generated avatar data stored:', generatedAvatar);
+
+					// Update the avatar preview image
+					const avatarImage = document.querySelector('.w-24.h-24.rounded-xl');
+					if (avatarImage && result.url) {
+						console.log('🖼️ Updating avatar preview with generated image...');
+						avatarImage.src = result.url;
+						avatarImage.alt = 'Generated Avatar';
+						
+						// Add error handling for image loading
+						avatarImage.onerror = function() {
+							console.error('❌ Failed to load avatar image:', result.url);
+							alert('Generated avatar image could not be loaded. Please try again.');
+						};
+						
+						avatarImage.onload = function() {
+							console.log('✅ Avatar image loaded and displayed successfully');
+						};
+					} else {
+						console.error('❌ No avatar image element found or no URL in result');
+					}
+
+					// Show success message
 					this.innerHTML = `
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
 						</svg>
-						Regenerate Avatar
+						Avatar Generated!
 					`;
-				}, 2000);
+					
+					// Add a visual indicator that avatar is ready to save
+					const avatarPreview = document.querySelector('.bg-gradient-to-br.from-indigo-100.to-purple-100');
+					if (avatarPreview) {
+						avatarPreview.classList.add('ring-2', 'ring-green-400', 'ring-opacity-50');
+						setTimeout(() => {
+							avatarPreview.classList.remove('ring-2', 'ring-green-400', 'ring-opacity-50');
+						}, 3000);
+					}
+
+					// Reset button after 2 seconds
+					setTimeout(() => {
+						this.innerHTML = `
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+							</svg>
+							Regenerate Avatar
+						`;
+						this.disabled = false;
+					}, 2000);
+
+				} catch (error) {
+					console.error('Avatar generation failed:', error);
+					
+					// Show error state
+					this.innerHTML = `
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+						Generation Failed
+					`;
+
+					// Show error message to user
+					alert(`Failed to generate avatar: ${error.message}`);
+
+					// Reset button after 3 seconds
+					setTimeout(() => {
+						this.innerHTML = `
+							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+							</svg>
+							Regenerate Avatar
+						`;
+						this.disabled = false;
+					}, 3000);
+				}
 			});
 		}
 
@@ -253,15 +397,31 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 						accent: document.getElementById('color3')?.value,
 						neutral: document.getElementById('color4')?.value
 					},
-					referenceImages: uploadedImages
+					referenceImages: uploadedImages,
+					generatedAvatar: generatedAvatar // Include the generated avatar data
 				};
+				
+				console.log('💾 Saving avatar creation data:', {
+					hasGeneratedAvatar: !!generatedAvatar,
+					generatedAvatarFilename: generatedAvatar?.filename,
+					referenceImagesCount: uploadedImages.length
+				});
+				
+				// Show user feedback about what's being saved
+				if (generatedAvatar) {
+					console.log('✅ Generated avatar will be saved with sticker group');
+				} else {
+					console.log('ℹ️ No generated avatar to save (user can generate one later)');
+				}
+				
 				// Update centralized state and request unified save
 				window.dispatchEvent(new CustomEvent('sectionDataUpdated', { detail: {
 					avatarCreation: {
 						description: formData.avatarDescription,
 						selectedStyle: formData.selectedStyle,
 						colorPalette: formData.colorPalette,
-						referenceImages: formData.referenceImages
+						referenceImages: formData.referenceImages,
+						generatedAvatar: formData.generatedAvatar
 					}
 				}}));
 				window.dispatchEvent(new CustomEvent('requestSave'));
@@ -289,6 +449,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 
 		// Reference Images functionality
 		let uploadedImages = [];
+		let generatedAvatar = null; // Store the generated avatar data
 		const MAX_IMAGES = 3;
 		const API_BASE = 'http://localhost:8002';
 
@@ -518,6 +679,20 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				uploadedImages = ac.referenceImages;
 				updateImageList();
 				updateUploadArea();
+			}
+			
+			// Load generated avatar if it exists
+			if (ac.generatedAvatar && ac.generatedAvatar.url) {
+				generatedAvatar = ac.generatedAvatar;
+				console.log('🔄 Restored generated avatar:', generatedAvatar);
+				
+				// Update the avatar preview image
+				const avatarImage = document.querySelector('.w-24.h-24.rounded-xl');
+				if (avatarImage) {
+					avatarImage.src = generatedAvatar.url;
+					avatarImage.alt = 'Generated Avatar';
+					console.log('🖼️ Avatar preview restored with generated image');
+				}
 			}
 		});
 	});
