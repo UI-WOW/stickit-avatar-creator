@@ -1,22 +1,5 @@
 ---
 import "../styles/global.css";
-// Ensure a simple device-scoped session cookie exists for the user
-const SESSION_COOKIE_NAME = "sticket-sid";
-const existingSession = Astro.cookies.get(SESSION_COOKIE_NAME)?.value;
-
-if (!existingSession) {
-    const generatedId = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) as string;
-    const oneYearSeconds = 60 * 60 * 24 * 365;
-    const isHttps = Astro.url?.protocol === "https:";
-
-    Astro.cookies.set(SESSION_COOKIE_NAME, generatedId, {
-        path: "/",
-        httpOnly: true,
-        secure: isHttps,
-        sameSite: "lax",
-        maxAge: oneYearSeconds,
-    });
-}
 ---
 
 <!doctype html>
@@ -30,6 +13,25 @@ if (!existingSession) {
 	</head>
 	<body>
 		<slot />
+		<script>
+			(function () {
+				var USER_COOKIE_NAME = 'stickit-user';
+				var hasCookie = document.cookie.split('; ').some(function (c) { return c.indexOf(USER_COOKIE_NAME + '=') === 0; });
+				if (!hasCookie) {
+					var value = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+						? crypto.randomUUID()
+						: Math.random().toString(36).slice(2);
+					var oneYearSeconds = 60 * 60 * 24 * 365;
+					var isHttps = window.location.protocol === 'https:';
+					var cookie = USER_COOKIE_NAME + '=' + encodeURIComponent(value)
+						+ '; Path=/'
+						+ '; Max-Age=' + oneYearSeconds
+						+ (isHttps ? '; Secure' : '')
+						+ '; SameSite=Lax';
+					document.cookie = cookie;
+				}
+			})();
+		</script>
 	</body>
 </html>
 

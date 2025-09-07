@@ -2,11 +2,14 @@ import { Hono } from 'hono'
 import { Bindings } from './bindings.js'
 import { createRequestLoggerMiddleware } from './middleware/requestLogger.js'
 import { GoogleGenAI } from "@google/genai";
-import { StickerService, KvService } from './services/index.js';
+import { StickerService, UserKVProvider } from './services/index.js';
 import { cors } from 'hono/cors'
+import { setCookie } from 'hono/cookie'
 
 export type Variables = {
   gemini: GoogleGenAI
+  userKV: UserKVProvider
+  userId?: string
 }
 
 export type honoContext = { Bindings: Bindings, Variables: Variables }
@@ -28,12 +31,24 @@ app.use('*', cors({
   allowHeaders: ['Content-Type']
 }))
 
-// Middleware to log all requests
+// Middleware: derive userId from cookies and put into context
+app.use('*', async (c, next) => {
+  const cookieHeader = c.req.header('cookie') || ''
+  const matchNew = cookieHeader.match(/(?:^|;\s*)stickit-user=([^;]+)/)
+  const matchLegacy = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
+  const userId = matchNew ? decodeURIComponent(matchNew[1]) : (matchLegacy ? decodeURIComponent(matchLegacy[1]) : null)
+  if (userId) c.set('userId', userId)
+  await next()
+})
+
+
+// Middleware to log all requests and inject providers
 app.use('*', async (c, next) => {
   const gemini = new GoogleGenAI({
     apiKey: c.env.GEMINI_API_KEY,
   });
   c.set('gemini', gemini);
+  c.set('userKV', new UserKVProvider(c.env.APP_KV))
   await next();
 });
 
@@ -63,52 +78,51 @@ app.get('/', (c) => {
 })
 
 // Simple KV-backed user collections and configs using session cookie as user id
-function getUserId(c: any): string | null {
-  const cookieHeader = c.req.header('cookie') || ''
-  const match = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
-  return match ? decodeURIComponent(match[1]) : null
-}
 
 app.get('/sticker-groups', async (c) => {
-  const userId = getUserId(c)
+  const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
-  const items = await KvService.listGroups(c.env.APP_KV, userId)
+  const items = await c.get('userKV').listGroups(userId)
+  console.log('[GET /sticker-groups]', { userId, count: items.length })
+  c.header('X-Session-Id', userId)
   return c.json({ items })
 })
 
 app.post('/sticker-groups', async (c) => {
-  const userId = getUserId(c)
+  const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const body = await c.req.json().catch(() => ({}))
   const name = body?.name || 'Untitled'
-  const item = await KvService.addGroup(c.env.APP_KV, userId, name)
+  const item = await c.get('userKV').addGroup(userId, name)
+  console.log('[POST /sticker-groups]', { userId, item })
+  c.header('X-Session-Id', userId)
   return c.json(item, 201)
 })
 
 app.get('/sticker-groups/:id/configs', async (c) => {
-  const userId = getUserId(c)
+  const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const groupId = c.req.param('id')
-  const items = await KvService.listConfigs(c.env.APP_KV, userId, groupId)
+  const items = await c.get('userKV').listConfigs(userId, groupId)
   return c.json({ items })
 })
 
 app.post('/sticker-groups/:id/configs', async (c) => {
-  const userId = getUserId(c)
+  const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const groupId = c.req.param('id')
   const body = await c.req.json().catch(() => ({}))
   const input = body?.input ?? {}
   const imageUrls = Array.isArray(body?.imageUrls) ? body.imageUrls : undefined
-  const item = await KvService.addConfig(c.env.APP_KV, userId, groupId, input, imageUrls)
+  const item = await c.get('userKV').addConfig(userId, groupId, input, imageUrls)
   return c.json(item, 201)
 })
 
 app.delete('/sticker-groups/:id', async (c) => {
-  const userId = getUserId(c)
+  const userId = c.get('userId') as string | undefined
   if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)
   const groupId = c.req.param('id')
-  const deleted = await KvService.deleteGroup(c.env.APP_KV, userId, groupId)
+  const deleted = await c.get('userKV').deleteGroup(userId, groupId)
   if (!deleted) return c.json({ success: false, message: 'not found' }, 404)
   return c.json({ success: true })
 })

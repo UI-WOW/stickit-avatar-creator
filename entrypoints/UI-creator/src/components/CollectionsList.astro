@@ -1,5 +1,5 @@
 ---
-const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 ---
 
 <div id="collections-root" class="space-y-6">
@@ -17,7 +17,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
             const url = `${API_BASE}/sticker-groups`;
             const res = await fetch(url, { credentials: 'include' });
             if (!res.ok) {
-                throw new Error(`Request failed (${res.status})`);
+                const t = await res.text().catch(() => '');
+                throw new Error(`Request failed (${res.status}): ${t}`);
             }
             const data = await res.json();
             const items = Array.isArray(data?.items) ? data.items : [];

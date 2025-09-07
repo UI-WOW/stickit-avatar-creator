@@ -3,4 +3,4 @@
  */
 
 export { StickerService } from './stickerService.js';
-export { KvService } from './kvService.js';
+export { UserKV, UserKVProvider } from './userKV.js';

@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
   </div>
 
 <script>
-  const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
+  const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
   const btn = document.getElementById('create-group');
   const modal = document.getElementById('create-modal');
   const input = document.getElementById('collection-name') as HTMLInputElement | null;
@@ -59,12 +59,15 @@ import { Button } from '@/components/ui/button';
         credentials: 'include',
         body: JSON.stringify({ name: name || 'Untitled' })
       });
-      if (!res.ok) throw new Error('Failed to create');
+      if (!res.ok) {
+        const t = await res.text().catch(() => '');
+        throw new Error(`Failed to create: ${res.status} ${t}`);
+      }
       closeModal();
       location.reload();
     } catch (e) {
-      console.error(e);
-      alert('Could not create collection');
+      console.error('Create group error', e);
+      alert('Could not create sticker group');
     }
   });
   </script>

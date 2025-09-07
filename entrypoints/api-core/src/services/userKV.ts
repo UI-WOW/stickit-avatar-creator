@@ -12,7 +12,7 @@ export type GroupConfig = {
   createdAt: string
 }
 
-export class KvService {
+export class UserKV {
   static userGroupsKey(userId: string) {
     return `user:${userId}:groups`
   }
@@ -62,9 +62,36 @@ export class KvService {
     if (changed) {
       await kv.put(this.userGroupsKey(userId), JSON.stringify(next))
     }
-    // also remove its configs key
     await kv.delete(this.groupConfigsKey(userId, groupId))
     return changed
+  }
+}
+
+export class UserKVProvider {
+  private kv: KVNamespace
+
+  constructor(kv: KVNamespace) {
+    this.kv = kv
+  }
+
+  listGroups(userId: string) {
+    return UserKV.listGroups(this.kv, userId)
+  }
+
+  addGroup(userId: string, name: string) {
+    return UserKV.addGroup(this.kv, userId, name)
+  }
+
+  listConfigs(userId: string, groupId: string) {
+    return UserKV.listConfigs(this.kv, userId, groupId)
+  }
+
+  addConfig(userId: string, groupId: string, input: Record<string, unknown>, imageUrls?: string[]) {
+    return UserKV.addConfig(this.kv, userId, groupId, input, imageUrls)
+  }
+
+  deleteGroup(userId: string, groupId: string) {
+    return UserKV.deleteGroup(this.kv, userId, groupId)
   }
 }
 
