@@ -98,27 +98,32 @@ async def process_image(
         # Remove white background
         processed_image = remove_white_background(image, white_threshold)
         
-        # Resize to target size
+        # Resize to target size (WhatsApp stickers should be 512x512)
         processed_image = processed_image.resize((output_size, output_size), Image.Resampling.LANCZOS)
         
-        # Convert to WebP
+        # Convert to WebP with WhatsApp sticker requirements
         output_buffer = io.BytesIO()
         processed_image.save(
             output_buffer, 
             format='WEBP', 
             quality=quality,
-            method=6  # Best compression
+            method=6,  # Best compression
+            lossless=False,  # Use lossy compression for smaller file size
+            exact=False,  # Allow format conversion
+            save_all=False  # Single frame only
         )
         
         output_data = output_buffer.getvalue()
         logger.info(f"Processed image size: {len(output_data)} bytes")
         
-        # Return WebP image
+        # Return WebP image with proper headers for WhatsApp stickers
         return Response(
             content=output_data,
             media_type="image/webp",
             headers={
-                "Content-Disposition": f"inline; filename=processed-{file.filename or 'image'}.webp"
+                "Content-Disposition": f"inline; filename=sticker-{file.filename or 'image'}.webp",
+                "X-Sticker-Type": "whatsapp",  # Custom header to indicate it's a sticker
+                "Cache-Control": "public, max-age=31536000"  # Cache for 1 year
             }
         )
         
@@ -207,27 +212,32 @@ async def process_image_advanced(
         else:
             processed_image = remove_white_background(image, white_threshold)
         
-        # Resize to target size
+        # Resize to target size (WhatsApp stickers should be 512x512)
         processed_image = processed_image.resize((output_size, output_size), Image.Resampling.LANCZOS)
         
-        # Convert to WebP
+        # Convert to WebP with WhatsApp sticker requirements
         output_buffer = io.BytesIO()
         processed_image.save(
             output_buffer, 
             format='WEBP', 
             quality=quality,
-            method=6  # Best compression
+            method=6,  # Best compression
+            lossless=False,  # Use lossy compression for smaller file size
+            exact=False,  # Allow format conversion
+            save_all=False  # Single frame only
         )
         
         output_data = output_buffer.getvalue()
         logger.info(f"Advanced processed image size: {len(output_data)} bytes")
         
-        # Return WebP image
+        # Return WebP image with proper headers for WhatsApp stickers
         return Response(
             content=output_data,
             media_type="image/webp",
             headers={
-                "Content-Disposition": f"inline; filename=advanced-{file.filename or 'image'}.webp"
+                "Content-Disposition": f"inline; filename=sticker-advanced-{file.filename or 'image'}.webp",
+                "X-Sticker-Type": "whatsapp",  # Custom header to indicate it's a sticker
+                "Cache-Control": "public, max-age=31536000"  # Cache for 1 year
             }
         )
         
@@ -281,6 +291,110 @@ def remove_white_background_advanced(image: Image.Image, threshold: int = 240) -
     except Exception as e:
         logger.error(f"Error in advanced processing: {str(e)}")
         return remove_white_background(image, threshold)
+
+@app.post("/create-whatsapp-sticker")
+async def create_whatsapp_sticker(
+    file: UploadFile = File(...),
+    white_threshold: int = 240,
+    format_type: str = "webp"  # "webp" or "png"
+):
+    """
+    Create a WhatsApp-compatible sticker
+    
+    WhatsApp sticker requirements:
+    - Size: 512x512 pixels
+    - Format: WebP
+    - File size: < 100KB (recommended)
+    - Transparent background
+    - Square aspect ratio
+    """
+    try:
+        # Read image data first
+        image_data = await file.read()
+        logger.info(f"Creating WhatsApp sticker: {file.filename}, size: {len(image_data)} bytes")
+        
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('image/'):
+            if len(image_data) >= 8:
+                if image_data[:8] == b'\x89PNG\r\n\x1a\n':
+                    logger.info("Detected PNG file from signature")
+                elif image_data[:2] == b'\xff\xd8':
+                    logger.info("Detected JPEG file from signature")
+                else:
+                    raise HTTPException(status_code=400, detail=f"File must be an image. Content type: {file.content_type}")
+            else:
+                raise HTTPException(status_code=400, detail=f"File too small to be an image. Content type: {file.content_type}")
+        
+        # Open image with PIL
+        try:
+            image = Image.open(io.BytesIO(image_data))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid image file: {str(e)}")
+        
+        # Convert to RGBA if not already
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+        
+        logger.info(f"Original image size: {image.size}, mode: {image.mode}")
+        
+        # Remove white background
+        processed_image = remove_white_background(image, white_threshold)
+        logger.info(f"After background removal: size={processed_image.size}, mode={processed_image.mode}")
+        
+        # Resize to exactly 512x512 (WhatsApp requirement)
+        processed_image = processed_image.resize((512, 512), Image.Resampling.LANCZOS)
+        logger.info(f"After resize: size={processed_image.size}, mode={processed_image.mode}")
+        
+        # WhatsApp requires WebP format with transparency
+        # Ensure we have proper RGBA mode for transparency
+        if processed_image.mode != 'RGBA':
+            processed_image = processed_image.convert('RGBA')
+        
+        # Optimize WebP compression to get under 100KB
+        # Use specific WebP parameters that WhatsApp recognizes
+        for quality in [90, 80, 70, 60, 50, 40]:
+            output_buffer = io.BytesIO()
+            processed_image.save(
+                output_buffer, 
+                format='WEBP', 
+                quality=quality,
+                method=6,  # Best compression
+                lossless=False,
+                exact=False,
+                save_all=False,
+                optimize=True,  # Enable optimization
+                minimize_size=True  # Minimize file size
+            )
+            
+            output_data = output_buffer.getvalue()
+            logger.info(f"WebP quality {quality}: {len(output_data)} bytes")
+            
+            # If under 100KB, use this quality
+            if len(output_data) < 100 * 1024:  # 100KB
+                break
+        
+        logger.info(f"Final WhatsApp sticker size: {len(output_data)} bytes")
+        
+        # Return WebP image with WhatsApp-specific headers
+        return Response(
+            content=output_data,
+            media_type="image/webp",
+            headers={
+                "Content-Disposition": f"attachment; filename=sticker-{file.filename or 'image'}.webp",
+                "X-Sticker-Type": "whatsapp",
+                "X-Sticker-Size": str(len(output_data)),
+                "X-Sticker-Dimensions": "512x512",
+                "X-Sticker-Format": "WEBP",
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "public, max-age=31536000"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating WhatsApp sticker: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(
