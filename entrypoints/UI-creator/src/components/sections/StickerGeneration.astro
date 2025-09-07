@@ -230,11 +230,73 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				<Button type="button" variant="outline" className="flex-1" id="cancelBtn">
 					Cancel
 				</Button>
-				<Button type="submit" className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
+				<Button type="submit" className="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
 					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
 					</svg>
 					Generate Sticker
+				</Button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<!-- Edit Sticker Modal -->
+<div id="editStickerModal" class="fixed inset-0 bg-black/30 backdrop-blur-sm hidden items-center justify-center z-[9999]">
+	<div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="editModalContent">
+		<div class="flex items-center justify-between mb-6">
+			<h3 class="text-2xl font-bold text-gray-800">Edit Sticker</h3>
+			<button id="closeEditModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+				</svg>
+			</button>
+		</div>
+		
+		<form class="space-y-6" id="editStickerForm">
+			<!-- Sticker Title -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Sticker Title *</label>
+				<input 
+					type="text" 
+					placeholder="e.g., Happy Response, Celebration, Helpful Assistant..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all hover:border-gray-300"
+					required
+					id="editStickerTitle"
+				/>
+			</div>
+			
+			<!-- Scenario -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">When should this sticker be used? *</label>
+				<textarea 
+					placeholder="e.g., When user is satisfied with the result, When announcing new features, When offering assistance..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-20 resize-none hover:border-gray-300"
+					required
+					id="editStickerScenario"
+				></textarea>
+			</div>
+			
+			<!-- Additional Notes -->
+			<div class="space-y-2">
+				<label class="text-sm font-medium text-gray-700">Additional Notes (Optional)</label>
+				<textarea 
+					placeholder="Any specific details about how this sticker should look or behave..."
+					class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-16 resize-none hover:border-gray-300"
+					id="editStickerNotes"
+				></textarea>
+			</div>
+			
+			<!-- Action Buttons -->
+			<div class="flex gap-3 pt-4">
+				<Button type="button" variant="outline" className="flex-1" id="cancelEditBtn">
+					Cancel
+				</Button>
+				<Button type="submit" className="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200">
+					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+					</svg>
+					Update & Regenerate
 				</Button>
 			</div>
 		</form>
@@ -247,6 +309,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		const addBtn = document.getElementById('addStickerBtn');
 		const closeBtn = document.getElementById('closeModalBtn');
 		const cancelBtn = document.getElementById('cancelBtn');
+		
+		// Edit modal elements
+		const editModal = document.getElementById('editStickerModal');
+		const closeEditBtn = document.getElementById('closeEditModalBtn');
+		const cancelEditBtn = document.getElementById('cancelEditBtn');
 		const form = document.getElementById('addStickerForm');
 		
 		// Sticker management
@@ -255,23 +322,14 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		
 		// Helper function to update stickers display
 		function updateStickersDisplay() {
-			console.log('🔄 updateStickersDisplay() called');
-			console.log('📊 generatedStickers length:', generatedStickers.length);
-			console.log('📊 generatedStickers content:', generatedStickers);
-			
 			const container = document.getElementById('stickersContainer');
-			if (!container) {
-				console.error('❌ stickersContainer not found');
-				return;
-			}
+			if (!container) return;
 			
 			// Clear existing content
 			container.innerHTML = '';
-			console.log('🧹 Cleared container content');
 			
 			// Add generated stickers
 			generatedStickers.forEach((sticker, index) => {
-				console.log(`🎨 Creating sticker element ${index}:`, sticker);
 				const stickerElement = createStickerElement(sticker, index);
 				container.appendChild(stickerElement);
 			});
@@ -310,22 +368,33 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 					container.appendChild(stickerElement);
 				});
 			}
-			console.log('✅ updateStickersDisplay() completed');
 		}
 		
 		// Helper function to create sticker element
 		function createStickerElement(sticker, index) {
-			console.log(`🎨 createStickerElement called for index ${index}:`, sticker);
-			
 			const div = document.createElement('div');
-			div.className = 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-indigo-200';
+			div.className = 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-indigo-200 relative group';
 			div.setAttribute('data-sticker-id', sticker.id);
 			
 			// Check if this is a generating sticker
 			const isGenerating = sticker.isGenerating || !sticker.url;
-			console.log(`🎯 Sticker ${index} isGenerating:`, isGenerating, 'has URL:', !!sticker.url);
 			
 			div.innerHTML = `
+				<!-- Delete Button - Top Right Corner -->
+				${!isGenerating ? `
+					<button class="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 delete-sticker opacity-0 group-hover:opacity-100" data-sticker-id="${sticker.id}" title="Delete sticker">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+						</svg>
+					</button>
+				` : `
+					<button class="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 delete-sticker" data-sticker-id="${sticker.id}" title="Cancel">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				`}
+				
 				<!-- Sticker Preview -->
 				<div class="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mb-6 hover:scale-110 transition-transform duration-200">
 					${isGenerating ? `
@@ -354,32 +423,26 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 					</div>
 					
 					<!-- Actions -->
-					<div class="flex gap-2 flex-wrap">
+					<div class="flex gap-2">
 						${isGenerating ? `
-							<button class="flex-1 bg-gray-300 text-gray-500 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed" disabled>
-								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<button class="flex-1 bg-gray-300 text-gray-500 px-4 py-2.5 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center" disabled>
+								<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 								</svg>
 								Generating...
 							</button>
-							<button class="flex-1 text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 delete-sticker" data-sticker-id="${sticker.id}">
-								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-								</svg>
-								Cancel
-							</button>
 						` : `
-							<button class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 regenerate-sticker" data-sticker-id="${sticker.id}">
-								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<button class="flex-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 regenerate-sticker flex items-center justify-center shadow-sm hover:shadow-md" data-sticker-id="${sticker.id}">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 								</svg>
 								Regenerate
 							</button>
-							<button class="flex-1 text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 delete-sticker" data-sticker-id="${sticker.id}">
-								<svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+							<button class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 edit-sticker flex items-center justify-center shadow-sm hover:shadow-md" data-sticker-id="${sticker.id}">
+								<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
 								</svg>
-								Delete
+								Modify
 							</button>
 						`}
 					</div>
@@ -574,6 +637,64 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			}
 		}
 		
+		function openEditModal(stickerId) {
+			// Find the sticker to edit
+			const sticker = generatedStickers.find(s => s.id === stickerId);
+			if (!sticker) return;
+			
+			// Prefill the form with current sticker data
+			document.getElementById('editStickerTitle').value = sticker.name;
+			document.getElementById('editStickerScenario').value = sticker.scenario;
+			document.getElementById('editStickerNotes').value = sticker.notes || '';
+			
+			// Store the sticker ID for later use
+			editModal.setAttribute('data-editing-sticker-id', stickerId);
+			
+			// Show modal with animation
+			if (editModal) {
+				editModal.classList.remove('hidden');
+				editModal.classList.add('flex');
+				document.body.style.overflow = 'hidden';
+				
+				// Animate modal in
+				const editModalContent = document.getElementById('editModalContent');
+				if (editModalContent) {
+					setTimeout(() => {
+						editModalContent.classList.remove('scale-95', 'opacity-0');
+						editModalContent.classList.add('scale-100', 'opacity-100');
+					}, 10);
+				}
+			}
+		}
+		
+		function closeEditModal() {
+			if (editModal) {
+				// Animate modal out
+				const editModalContent = document.getElementById('editModalContent');
+				if (editModalContent) {
+					editModalContent.classList.remove('scale-100', 'opacity-100');
+					editModalContent.classList.add('scale-95', 'opacity-0');
+				}
+				// Close after animation
+				setTimeout(() => {
+					editModal.classList.add('hidden');
+					editModal.classList.remove('flex');
+					document.body.style.overflow = 'auto';
+					
+					// Clear form
+					const titleInput = document.getElementById('editStickerTitle');
+					const scenarioInput = document.getElementById('editStickerScenario');
+					const notesInput = document.getElementById('editStickerNotes');
+					if (titleInput) titleInput.value = '';
+					if (scenarioInput) scenarioInput.value = '';
+					if (notesInput) notesInput.value = '';
+					
+					// Clear stored sticker ID
+					editModal.removeAttribute('data-editing-sticker-id');
+				}, 300);
+			}
+		}
+		
 		async function handleSubmit(event) {
 			event.preventDefault();
 			
@@ -685,7 +806,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				}
 				
 				const result = await response.json();
-				console.log('✅ Sticker generation successful:', result.sticker);
 				
 				// Find and update the temporary sticker
 				const tempStickerIndex = generatedStickers.findIndex(s => s.id === tempStickerId);
@@ -693,7 +813,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 					// Replace the temporary sticker with the real one
 					generatedStickers[tempStickerIndex] = result.sticker;
 					
-					// Simply refresh the entire display - this is more reliable
+					// Update the UI
 					updateStickersDisplay();
 					
 					// Save to centralized state
@@ -718,6 +838,121 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			}
 		}
 		
+		async function handleEditSubmit(event) {
+			event.preventDefault();
+			
+			const title = document.getElementById('editStickerTitle')?.value;
+			const scenario = document.getElementById('editStickerScenario')?.value;
+			const notes = document.getElementById('editStickerNotes')?.value;
+			
+			if (!title || !scenario) {
+				// Show inline validation error
+				const errorDiv = document.createElement('div');
+				errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-3 mb-4';
+				errorDiv.innerHTML = `
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+						</svg>
+						<span class="text-red-700 text-sm">Please fill in the required fields (Title and Scenario)</span>
+					</div>
+				`;
+				
+				// Insert error message at the top of the form
+				const form = document.getElementById('editStickerForm');
+				if (form) {
+					form.insertBefore(errorDiv, form.firstChild);
+					
+					// Remove error message after 3 seconds
+					setTimeout(() => {
+						if (errorDiv.parentNode) {
+							errorDiv.parentNode.removeChild(errorDiv);
+						}
+					}, 3000);
+				}
+				return;
+			}
+			
+			// Get the sticker ID being edited
+			const stickerId = editModal.getAttribute('data-editing-sticker-id');
+			if (!stickerId) return;
+			
+			// Find the sticker to update
+			const stickerIndex = generatedStickers.findIndex(s => s.id === stickerId);
+			if (stickerIndex === -1) return;
+			
+			const existingSticker = generatedStickers[stickerIndex];
+			
+			// Update the sticker data
+			existingSticker.name = title;
+			existingSticker.scenario = scenario;
+			existingSticker.notes = notes || '';
+			existingSticker.description = `A sticker for: ${scenario}`;
+			
+			// Show loading state
+			showStickerLoadingState(stickerId, 'Updating sticker...');
+			
+			// Close modal immediately
+			closeEditModal();
+			
+			try {
+				// Get centralized state
+				const state = window.stickitGroupState || {};
+				const brandIdentity = state.input?.brandIdentity || {};
+				const avatarCreation = state.input?.avatarCreation || {};
+				
+				// Get group ID
+				const params = new URLSearchParams(window.location.search);
+				const groupId = params.get('groupId');
+				
+				// Prepare sticker data
+				const stickerData = {
+					name: title,
+					scenario: scenario,
+					description: `A sticker for: ${scenario}`,
+					notes: notes || ''
+				};
+				
+				// Prepare request payload
+				const payload = {
+					stickerData,
+					brandIdentity,
+					avatarCreation,
+					groupId
+				};
+				
+				// Call the API
+				const response = await fetch(`${API_BASE}/generate-sticker`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					credentials: 'include',
+					body: JSON.stringify(payload)
+				});
+				
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+				}
+				
+				const result = await response.json();
+				
+				// Update the sticker in our array
+				generatedStickers[stickerIndex] = result.sticker;
+				
+				// Update the UI
+				updateStickersDisplay();
+				
+				// Save to centralized state
+				saveStickersToState();
+				
+			} catch (error) {
+				console.error('❌ Sticker update failed:', error);
+				showStickerErrorState(stickerId, `Failed to update: ${error.message}`);
+			}
+		}
+		
 		// Event listeners
 		if (addBtn) {
 			addBtn.addEventListener('click', openModal);
@@ -735,6 +970,20 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 			form.addEventListener('submit', handleSubmit);
 		}
 		
+		// Edit modal event listeners
+		if (closeEditBtn) {
+			closeEditBtn.addEventListener('click', closeEditModal);
+		}
+		
+		if (cancelEditBtn) {
+			cancelEditBtn.addEventListener('click', closeEditModal);
+		}
+		
+		const editForm = document.getElementById('editStickerForm');
+		if (editForm) {
+			editForm.addEventListener('submit', handleEditSubmit);
+		}
+		
 		// Close modal when clicking outside
 		if (modal) {
 			modal.addEventListener('click', function(e) {
@@ -743,26 +992,58 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				}
 			});
 		}
+		
+		if (editModal) {
+			editModal.addEventListener('click', function(e) {
+				if (e.target === editModal) {
+					closeEditModal();
+				}
+			});
+		}
 
 		// Regenerate all button
 		const regenerateAllBtn = document.getElementById('regenerateAll');
 		if (regenerateAllBtn) {
 			regenerateAllBtn.addEventListener('click', function() {
+				// Show loading state
+				const originalContent = this.innerHTML;
 				this.innerHTML = `
 					<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 					</svg>
 					Regenerating All...
 				`;
+				this.disabled = true;
 				
+				// Find all regenerate buttons and simulate clicks
+				const regenerateButtons = document.querySelectorAll('.regenerate-sticker');
+				let completedCount = 0;
+				const totalCount = regenerateButtons.length;
+				
+				if (totalCount === 0) {
+					// No stickers to regenerate, reset button immediately
+					this.innerHTML = originalContent;
+					this.disabled = false;
+					return;
+				}
+				
+				// Simulate clicks on all regenerate buttons with small delays
+				regenerateButtons.forEach((button, index) => {
 				setTimeout(() => {
-					this.innerHTML = `
-						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-						</svg>
-						Regenerate All
-					`;
-				}, 3000);
+						// Simulate a click on the regenerate button
+						button.click();
+						
+						// Check if this was the last button
+						completedCount++;
+						if (completedCount === totalCount) {
+							// All buttons have been clicked, reset the "Regenerate All" button after a delay
+							setTimeout(() => {
+								this.innerHTML = originalContent;
+								this.disabled = false;
+							}, 2000); // Give some time for the last regeneration to start
+						}
+					}, index * 500); // Stagger the clicks by 500ms to avoid overwhelming the API
+				});
 			});
 		}
 
@@ -825,17 +1106,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				}
 				
 				const result = await response.json();
-				console.log('✅ Sticker regeneration successful:', result.sticker);
 				
 				// Update the sticker in our array
 				generatedStickers[stickerIndex] = result.sticker;
-				console.log('📝 Updated generatedStickers array:', generatedStickers[stickerIndex]);
-				console.log('📝 Full generatedStickers array:', generatedStickers);
 				
-				// IMMEDIATELY update the UI - no complex functions
-				console.log('🎨 IMMEDIATELY updating UI...');
+				// Update the UI
 				updateStickersDisplay();
-				console.log('✅ updateStickersDisplay() called');
 				
 				// Save to centralized state
 				saveStickersToState();
@@ -965,6 +1241,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				const button = e.target.closest('.regenerate-sticker');
 				const stickerId = button.dataset.stickerId;
 				regenerateSticker(stickerId, button);
+			} else if (e.target.closest('.edit-sticker')) {
+				const button = e.target.closest('.edit-sticker');
+				const stickerId = button.dataset.stickerId;
+				openEditModal(stickerId);
 			} else if (e.target.closest('.generate-default-sticker')) {
 				const button = e.target.closest('.generate-default-sticker');
 				const stickerIndex = parseInt(button.dataset.stickerId);
