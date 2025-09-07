@@ -28,6 +28,11 @@ export interface StickerDefinitionInput {
   description?: string
   notes?: string
   imageUrl?: string
+  url?: string  // For generated stickers
+  filename?: string  // For generated stickers
+  size?: number  // For generated stickers
+  generationTime?: number  // For generated stickers
+  generatedAt?: string  // For generated stickers
 }
 
 export interface StickerGenerationInput {

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { honoContext } from '../index.js'
+import type { StickerDefinitionInput } from '../services/types.js'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -62,7 +63,7 @@ export function setupChatRoutes(app: Hono<honoContext>) {
         scenario: sticker.scenario,
         description: sticker.description || '',
         notes: sticker.notes || '',
-        imageUrl: sticker.imageUrl || ''
+        imageUrl: sticker.url || sticker.imageUrl || ''
       }))
 
       // Create conversation context for Gemini
@@ -236,7 +237,7 @@ Respond with a JSON object containing:
         scenario: sticker.scenario,
         description: sticker.description || '',
         notes: sticker.notes || '',
-        imageUrl: sticker.imageUrl || ''
+        imageUrl: sticker.url || sticker.imageUrl || ''
       }))
 
       return c.json({

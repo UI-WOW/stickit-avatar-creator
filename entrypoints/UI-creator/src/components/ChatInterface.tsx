@@ -28,7 +28,7 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl }: ChatInt
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [availableStickers, setAvailableStickers] = useState<Sticker[]>([]);
-  const [chatAvatarUrl, setChatAvatarUrl] = useState(avatarUrl || '/dummy-sticker.webp');
+  const [chatAvatarUrl, setChatAvatarUrl] = useState(avatarUrl || '');
   const [displayGroupName, setDisplayGroupName] = useState(groupName || 'Loading...');
   const [groupId, setGroupId] = useState<string>('');
   
@@ -128,12 +128,13 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl }: ChatInt
           setDisplayGroupName(data.name);
         }
         
-        // Update avatar
-        const configs = data.configs || [];
-        const latestConfig = Array.isArray(configs) ? configs[0] : undefined;
-        
-        if (latestConfig?.input?.avatarCreation?.generatedAvatar?.url) {
-          setChatAvatarUrl(latestConfig.input.avatarCreation.generatedAvatar.url);
+        // Update avatar from the input configuration
+        if (data.input?.avatarCreation?.generatedAvatar?.url) {
+          const avatarUrl = data.input.avatarCreation.generatedAvatar.url;
+          setChatAvatarUrl(avatarUrl);
+          console.log('✅ Updated chat avatar URL:', avatarUrl);
+        } else {
+          console.log('ℹ️ No avatar URL found in group data');
         }
       }
     } catch (error) {
@@ -315,11 +316,17 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl }: ChatInt
     return (
       <div key={message.id} className="flex items-start space-x-2">
         <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <img 
-            src={chatAvatarUrl} 
-            alt="AI" 
-            className="w-6 h-6 rounded" 
-          />
+          {chatAvatarUrl ? (
+            <img 
+              src={chatAvatarUrl} 
+              alt="AI" 
+              className="w-6 h-6 rounded" 
+            />
+          ) : (
+            <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center">
+              <span className="text-xs text-gray-500">AI</span>
+            </div>
+          )}
         </div>
         <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[280px]">
           {message.text && (
@@ -349,7 +356,13 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl }: ChatInt
       <div className="h-16 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center px-4 text-white flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <img src={chatAvatarUrl} alt="AI Assistant" className="w-8 h-8 rounded-lg" />
+            {chatAvatarUrl ? (
+              <img src={chatAvatarUrl} alt="AI Assistant" className="w-8 h-8 rounded-lg" />
+            ) : (
+              <div className="w-8 h-8 bg-gray-300 rounded-lg flex items-center justify-center">
+                <span className="text-xs text-gray-500 font-medium">AI</span>
+              </div>
+            )}
           </div>
           <div>
             <h3 className="font-semibold">{displayGroupName}</h3>
@@ -363,7 +376,13 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl }: ChatInt
         {/* Welcome Message */}
         <div className="flex items-start space-x-2">
           <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <img src={chatAvatarUrl} alt="AI" className="w-6 h-6 rounded" />
+            {chatAvatarUrl ? (
+              <img src={chatAvatarUrl} alt="AI" className="w-6 h-6 rounded" />
+            ) : (
+              <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center">
+                <span className="text-xs text-gray-500">AI</span>
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[280px]">
             <p className="text-sm text-gray-800">Hi! I'm your AI Assistant. How can I help you today? 🚀</p>
