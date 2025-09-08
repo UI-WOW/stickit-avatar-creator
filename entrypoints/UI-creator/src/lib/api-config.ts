@@ -4,7 +4,7 @@
  */
 
 export const API_CONFIG = {
-  BASE_URL: "http://localhost:8002",//'https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev',
+  BASE_URL: 'https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev',
   
   // API Endpoints
   ENDPOINTS: {
