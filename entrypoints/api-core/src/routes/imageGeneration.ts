@@ -28,7 +28,7 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 
       // Build comprehensive prompt from user preferences
       console.log('🔨 Building avatar generation prompt...');
-      let prompt = `Create a kawaii-style sticker avatar that will be used as the base character for multiple stickers. This avatar should be designed to be consistent across different expressions and scenarios.\n\n`
+      let prompt = `GENERATE A HIGH-QUALITY PNG IMAGE of a kawaii-style sticker avatar that will be used as the base character for multiple stickers. This avatar should be designed to be consistent across different expressions and scenarios.\n\n`
       
       // PRIORITY 1: Avatar Creation Details (Most Important)
       prompt += `=== AVATAR CHARACTER DESIGN (PRIMARY) ===\n`
@@ -90,7 +90,9 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 - FOCUS ON CHARACTER: The character should be the only visual element, with minimal or no background elements
 
 === FINAL REMINDER ===
-WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.`
+WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.
+
+IMPORTANT: Please generate a high-quality PNG image of this avatar character. The image should be clear, well-defined, and ready for use as a sticker.`
       
       console.log('📝 Generated prompt length:', prompt.length, 'characters');
       
@@ -171,18 +173,41 @@ WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. K
 
       // Extract image data from response
       console.log('🔍 Extracting image data from Gemini response...');
+      console.log('📊 Response structure:', JSON.stringify({
+        hasCandidates: !!response.candidates,
+        candidatesLength: response.candidates?.length || 0,
+        firstCandidate: response.candidates?.[0] ? {
+          hasContent: !!response.candidates[0].content,
+          hasParts: !!response.candidates[0].content?.parts,
+          partsLength: response.candidates[0].content?.parts?.length || 0,
+          firstPart: response.candidates[0].content?.parts?.[0] ? {
+            hasInlineData: !!response.candidates[0].content.parts[0].inlineData,
+            hasData: !!response.candidates[0].content.parts[0].inlineData?.data,
+            mimeType: response.candidates[0].content.parts[0].inlineData?.mimeType
+          } : null
+        } : null
+      }, null, 2));
+      
       if (response.candidates && response.candidates[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
           if (part.inlineData?.data) {
-            const base64Data = part.inlineData.data;
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+            try {
+              const base64Data = part.inlineData.data;
+              console.log('📊 Base64 data length:', base64Data.length);
+              console.log('📊 Base64 data preview:', base64Data.substring(0, 50) + '...');
+              
+              const binaryString = atob(base64Data);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              imageData = bytes.buffer;
+              console.log('✅ Image data extracted successfully, size:', imageData.byteLength, 'bytes');
+              break;
+            } catch (error) {
+              console.error('❌ Error processing base64 data:', error);
+              console.error('❌ Base64 data that failed:', part.inlineData.data.substring(0, 100));
             }
-            imageData = bytes.buffer;
-            console.log('✅ Image data extracted successfully, size:', imageData.byteLength, 'bytes');
-            break;
           }
         }
       }
@@ -308,7 +333,7 @@ WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. K
 
       // Build comprehensive prompt for sticker generation
       console.log('🔨 Building sticker generation prompt...');
-      let prompt = `Create a kawaii-style sticker featuring the same character/avatar in different scenarios. The avatar should be consistent across all stickers.\n\n`
+      let prompt = `GENERATE A HIGH-QUALITY PNG IMAGE of a kawaii-style sticker featuring the same character/avatar in different scenarios. The avatar should be consistent across all stickers.\n\n`
       
       // PRIORITY 1: Generated Avatar Image (ABSOLUTE PRIMARY REFERENCE)
       prompt += `=== GENERATED AVATAR (ABSOLUTE PRIMARY REFERENCE) ===\n`
@@ -390,7 +415,9 @@ WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. K
 - EXCEPTION: Only add text if the scenario specifically mentions text, speech, or written content
 
 === FINAL REMINDER ===
-WHATSAPP STICKER FORMAT: This sticker will be used in WhatsApp. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.`
+WHATSAPP STICKER FORMAT: This sticker will be used in WhatsApp. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.
+
+IMPORTANT: Please generate a high-quality PNG image of this sticker. The image should be clear, well-defined, and ready for use as a WhatsApp sticker.`
       
       console.log('📝 Generated sticker prompt length:', prompt.length, 'characters');
       
@@ -515,18 +542,41 @@ WHATSAPP STICKER FORMAT: This sticker will be used in WhatsApp. Keep the design 
 
       // Extract image data from response
       console.log('🔍 Extracting sticker image data from Gemini response...');
+      console.log('📊 Sticker response structure:', JSON.stringify({
+        hasCandidates: !!response.candidates,
+        candidatesLength: response.candidates?.length || 0,
+        firstCandidate: response.candidates?.[0] ? {
+          hasContent: !!response.candidates[0].content,
+          hasParts: !!response.candidates[0].content?.parts,
+          partsLength: response.candidates[0].content?.parts?.length || 0,
+          firstPart: response.candidates[0].content?.parts?.[0] ? {
+            hasInlineData: !!response.candidates[0].content.parts[0].inlineData,
+            hasData: !!response.candidates[0].content.parts[0].inlineData?.data,
+            mimeType: response.candidates[0].content.parts[0].inlineData?.mimeType
+          } : null
+        } : null
+      }, null, 2));
+      
       if (response.candidates && response.candidates[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
           if (part.inlineData?.data) {
-            const base64Data = part.inlineData.data;
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
+            try {
+              const base64Data = part.inlineData.data;
+              console.log('📊 Sticker base64 data length:', base64Data.length);
+              console.log('📊 Sticker base64 data preview:', base64Data.substring(0, 50) + '...');
+              
+              const binaryString = atob(base64Data);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              imageData = bytes.buffer;
+              console.log('✅ Sticker image data extracted successfully, size:', imageData.byteLength, 'bytes');
+              break;
+            } catch (error) {
+              console.error('❌ Error processing sticker base64 data:', error);
+              console.error('❌ Sticker base64 data that failed:', part.inlineData.data.substring(0, 100));
             }
-            imageData = bytes.buffer;
-            console.log('✅ Sticker image data extracted successfully, size:', imageData.byteLength, 'bytes');
-            break;
           }
         }
       }
