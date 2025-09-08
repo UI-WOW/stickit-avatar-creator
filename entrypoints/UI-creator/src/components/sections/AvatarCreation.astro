@@ -127,18 +127,30 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			
 			<!-- Avatar Preview -->
 			<div class="space-y-4 mt-8">
-				<h3 class="text-lg font-semibold text-gray-800">Avatar Preview</h3>
+				<h3 class="text-lg font-semibold text-gray-800">Generate Your Avatar</h3>
 				<div class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-8 text-center">
 					<div class="w-32 h-32 mx-auto bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4">
 						<img src="/dummy-sticker.webp" alt="Generated Avatar" class="w-24 h-24 rounded-xl" />
 					</div>
 					<p class="text-sm text-gray-600 mb-2">Your AI assistant avatar</p>
-					<p class="text-xs text-gray-500">Based on your description and brand</p>
-					<Button variant="outline" size="sm" className="mt-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0" id="regenerateAvatar">
-						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<p class="text-xs text-gray-500 mb-4">Based on your description and brand</p>
+					
+					<!-- Call to Action -->
+					<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+						<div class="flex items-center justify-center mb-2">
+							<svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+							</svg>
+							<p class="text-sm font-medium text-yellow-800">Important Step!</p>
+						</div>
+						<p class="text-xs text-yellow-700">Click the button below to generate your avatar. This is required for creating stickers!</p>
+					</div>
+					
+					<Button variant="outline" size="lg" className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" id="regenerateAvatar">
+						<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 						</svg>
-						Regenerate Avatar
+						Generate Avatar
 					</Button>
 				</div>
 			</div>
@@ -341,15 +353,31 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 					const avatarPreview = document.querySelector('.bg-gradient-to-br.from-indigo-100.to-purple-100');
 					if (avatarPreview) {
 						avatarPreview.classList.add('ring-2', 'ring-green-400', 'ring-opacity-50');
+						
+						// Update the call-to-action section to show success
+						const callToAction = avatarPreview.querySelector('.bg-yellow-50');
+						if (callToAction) {
+							callToAction.className = 'bg-green-50 border border-green-200 rounded-lg p-4 mb-4';
+							callToAction.innerHTML = `
+								<div class="flex items-center justify-center mb-2">
+									<svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+									</svg>
+									<p class="text-sm font-medium text-green-800">Avatar Generated Successfully!</p>
+								</div>
+								<p class="text-xs text-green-700">Your avatar is ready! You can now proceed to create stickers.</p>
+							`;
+						}
+						
 						setTimeout(() => {
 							avatarPreview.classList.remove('ring-2', 'ring-green-400', 'ring-opacity-50');
-						}, 3000);
+						}, 5000);
 					}
 
 					// Reset button after 2 seconds
 				setTimeout(() => {
 						this.innerHTML = `
-							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 							</svg>
 							Regenerate Avatar
@@ -374,10 +402,10 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 					// Reset button after 3 seconds
 					setTimeout(() => {
 						this.innerHTML = `
-							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
 							</svg>
-							Regenerate Avatar
+							Generate Avatar
 						`;
 						this.disabled = false;
 					}, 3000);
