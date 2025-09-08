@@ -29,7 +29,6 @@ export function setupStickerGroupRoutes(app: Hono<honoContext>) {
 
   app.get('/sticker-groups/:id', async (c) => {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     const userId = c.get('userId') as string | undefined
     if (!userId) return c.json({ error: 'missing session cookie sticket-sid' }, 400)

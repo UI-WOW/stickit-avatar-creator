@@ -1435,10 +1435,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 		const seeItInActionBtn = document.getElementById('seeItInActionBtn');
 		if (seeItInActionBtn) {
 			seeItInActionBtn.addEventListener('click', function() {
-				// Emit event to move to next step
-				window.dispatchEvent(new CustomEvent('stepCompleted', { 
-					detail: { step: 'stickerGeneration', data: { completed: true } } 
-				}));
+				console.log('🚀 See It In Action button clicked, reloading page...');
+				
+				// Get current URL and add hash with timestamp to force reload
+				const currentUrl = new URL(window.location.href);
+				currentUrl.hash = 'see-it-in-action';
+				currentUrl.searchParams.set('_t', Date.now().toString());
+				
+				// Navigate to the new URL (this will cause a reload)
+				window.location.href = currentUrl.toString();
 			});
 		}
 

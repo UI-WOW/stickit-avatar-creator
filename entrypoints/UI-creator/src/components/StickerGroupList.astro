@@ -317,9 +317,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
             const data = await res.json();
             const items = Array.isArray(data?.items) ? data.items : [];
 
-            if (loading) loading.remove();
-
             if (items.length === 0) {
+                if (loading) loading.remove();
                 const empty = document.createElement('div');
                 empty.className = 'text-center text-gray-500';
                 empty.textContent = 'No sticker groups yet. Create your first group to get started!';
@@ -327,10 +326,25 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                 return;
             }
 
+            // Update loading text to show we're processing the data
+            if (loading) {
+                loading.textContent = `Found ${items.length} sticker group${items.length !== 1 ? 's' : ''}. Loading details...`;
+            }
+
             const list = document.createElement('div');
             list.className = 'grid grid-cols-1 gap-4';
 
-            for (const col of items) {
+            for (let i = 0; i < items.length; i++) {
+                const col = items[i];
+                
+                // Update loading progress
+                if (loading) {
+                    loading.textContent = `Loading sticker group ${i + 1} of ${items.length}...`;
+                }
+                
+                // Allow UI to update
+                await new Promise(resolve => setTimeout(resolve, 10));
+                
                 // Create card with loading state first
                 const raw = (tpl?.innerHTML || '')
                     .replaceAll('__ID__', String(col.id ?? ''))
@@ -455,6 +469,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
                 }
             }
 
+            // Only remove loading and add the list after all cards are fully rendered
+            if (loading) loading.remove();
             root.appendChild(list);
         } catch (err) {
             if (loading) loading.remove();

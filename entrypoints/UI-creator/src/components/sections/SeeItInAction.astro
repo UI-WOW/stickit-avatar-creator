@@ -5,7 +5,7 @@ import ChatInterface from '../ChatInterface.tsx';
 const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 ---
 
-<Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
+<Card id="see-it-in-action" className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300">
 	<CardHeader className="pb-4">
 		<div class="flex items-center space-x-3">
 			<div class="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">4</div>
@@ -44,6 +44,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 								apiBase={API_BASE}
 								embedded={true}
 								client:load
+								id="chat-interface-desktop"
 							/>
 						</div>
 					</div>
@@ -54,6 +55,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 					<ChatInterface 
 						apiBase={API_BASE}
 						client:load
+						id="chat-interface-mobile"
 					/>
 				</div>
 			</div>
@@ -315,6 +317,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 
 	// Simple script to handle the go back button and download button
 	document.addEventListener('DOMContentLoaded', function() {
+		console.log('🚀 SeeItInAction component loaded');
+		
 		const goBackButton = document.getElementById('goBackSeeItInAction');
 		if (goBackButton) {
 			goBackButton.addEventListener('click', function() {

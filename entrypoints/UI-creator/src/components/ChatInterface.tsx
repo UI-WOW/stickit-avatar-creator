@@ -22,9 +22,10 @@ interface ChatInterfaceProps {
   groupName?: string;
   avatarUrl?: string;
   embedded?: boolean; // For use inside phone frame
+  id?: string; // For identifying specific instances
 }
 
-export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded = false }: ChatInterfaceProps) {
+export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded = false, id }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +75,7 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded 
     }
   }, [groupId, apiBase]);
 
+
   // Update avatar and group name when props change
   useEffect(() => {
     if (avatarUrl) {
@@ -113,6 +115,7 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded 
       console.error('Error loading stickers:', error);
     }
   };
+
 
   const loadGroupData = async () => {
     try {
