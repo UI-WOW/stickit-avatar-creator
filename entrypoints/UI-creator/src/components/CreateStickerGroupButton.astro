@@ -69,22 +69,24 @@ import { Button } from '@/components/ui/button';
       // 2) Initialize with dummy starter data (single unified payload)
       if (created?.id) {
         const starter = {
-          name: created.name || (name || 'Untitled'),
+          name: created.name || (name || 'Nano Banana Buddy'),
           input: {
             brandIdentity: {
-              avatarType: 'Assistant',
-              avatarDescription: 'Describe what your assistant helps with…',
-              personalityTraits: ['Friendly', 'Helpful']
+              avatarType: 'Entertainment Bot',
+              avatarDescription: 'A super fun and energetic banana character that brings joy and excitement to the Nano Banana Hackathon! This little banana buddy is here to cheer you on, celebrate your wins, and make coding feel like a party! 🍌✨',
+              personalityTraits: ['Fun', 'Energetic', 'Encouraging']
             },
             avatarCreation: {
-              description: 'Describe your ideal avatar look and vibe…',
-              selectedStyle: 'No specific style',
+              description: 'A simple, cute banana sticker - just a regular banana with a bright yellow color, maybe with some fun expressions or poses. Perfect for the Nano Banana Hackathon! Keep it simple and fun - just a banana being a banana! 🍌',
+              personality: 'Energetic Enthusiast',
               colorPalette: {
-                primary: '#4F46E5',
-                secondary: '#7C3AED',
-                accent: '#EC4899',
-                neutral: '#475569'
-              }
+                primary: '#FFD700', // Bright banana yellow
+                secondary: '#32CD32', // Fresh green (banana leaf)
+                accent: '#FF6B35', // Vibrant orange (banana tip)
+                neutral: '#8B4513' // Brown (banana spots)
+              },
+              referenceImages: [],
+              generatedAvatar: null
             },
             stickerGeneration: {}
           }

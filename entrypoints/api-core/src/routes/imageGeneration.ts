@@ -80,7 +80,17 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 - Optimized for sticker format (clear, recognizable at small sizes)
 - Professional yet approachable design
 - Design should be versatile enough to work in multiple expressions and scenarios
-- Character should have distinctive features that remain consistent across different stickers`
+- Character should have distinctive features that remain consistent across different stickers
+
+=== WHATSAPP STICKER OPTIMIZATION ===
+- NO TEXT: Do not include any text, words, or speech bubbles
+- NO DECORATIVE ELEMENTS: Avoid splashes, sparkles, stars, or decorative elements outside the main character
+- CLEAN DESIGN: Keep the design simple and focused on the main character only
+- WHATSAPP COMPATIBLE: Design should work perfectly when converted to WhatsApp sticker format
+- FOCUS ON CHARACTER: The character should be the only visual element, with minimal or no background elements
+
+=== FINAL REMINDER ===
+WHATSAPP STICKER FORMAT: This avatar will be used to create WhatsApp stickers. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.`
       
       console.log('📝 Generated prompt length:', prompt.length, 'characters');
       
@@ -369,7 +379,18 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 - The generated avatar is the definitive reference - all other descriptions are secondary
 - Only the expression, pose, and context should change based on the scenario
 - Maintain the exact same visual identity, features, and style as the generated avatar
-- If a generated avatar is provided, ignore conflicting descriptions and use the avatar image as the source of truth`
+- If a generated avatar is provided, ignore conflicting descriptions and use the avatar image as the source of truth
+
+=== WHATSAPP STICKER OPTIMIZATION ===
+- NO TEXT: Do not include any text, words, or speech bubbles unless explicitly requested in the scenario
+- NO DECORATIVE ELEMENTS: Avoid splashes, sparkles, stars, or decorative elements outside the main character
+- CLEAN DESIGN: Keep the design simple and focused on the main character only
+- WHATSAPP COMPATIBLE: Design should work perfectly when converted to WhatsApp sticker format
+- FOCUS ON CHARACTER: The character should be the only visual element, with minimal or no background elements
+- EXCEPTION: Only add text if the scenario specifically mentions text, speech, or written content
+
+=== FINAL REMINDER ===
+WHATSAPP STICKER FORMAT: This sticker will be used in WhatsApp. Keep the design clean and simple - focus only on the character. Avoid any text, speech bubbles, decorative elements, or background details that might get removed during WhatsApp conversion. The character should be the only visual element.`
       
       console.log('📝 Generated sticker prompt length:', prompt.length, 'characters');
       
