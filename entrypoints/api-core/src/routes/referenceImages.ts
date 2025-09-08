@@ -40,7 +40,7 @@ export function setupReferenceImageRoutes(app: Hono<honoContext>) {
       })
       
       // Get public URL - point directly to API server with query parameter
-      const publicUrl = `http://localhost:8002/reference-images?filePath=${encodeURIComponent(filename)}`
+      const publicUrl = `https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/reference-images?filePath=${encodeURIComponent(filename)}`
       
       return c.json({
         success: true,

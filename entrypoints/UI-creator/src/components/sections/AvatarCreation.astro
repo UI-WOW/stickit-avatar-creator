@@ -284,7 +284,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 
 					// Get API base URL
 					const envEl = document.getElementById('env-avatar');
-					const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || 'http://localhost:8002';
+					const API_BASE = (envEl && envEl.getAttribute('data-api-base')) || 'https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev';
 
 					console.log('🚀 Sending avatar generation request to API...');
 
@@ -482,7 +482,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 		let uploadedImages = [];
 		let generatedAvatar = null; // Store the generated avatar data
 		const MAX_IMAGES = 3;
-		const API_BASE = 'http://localhost:8002';
+		const API_BASE = 'https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev';
 
 		// File upload handling
 		const uploadArea = document.getElementById('uploadArea');

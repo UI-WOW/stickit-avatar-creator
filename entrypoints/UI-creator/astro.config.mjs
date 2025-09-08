@@ -12,7 +12,7 @@ export default defineConfig({
     // server: {
     //   proxy: {
     //     '/api': {
-    //       target: 'http://localhost:8002',
+    //       target: 'https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev',
     //       changeOrigin: true,
     //       rewrite: (path) => path.replace(/^\/api/, '')
     //     }

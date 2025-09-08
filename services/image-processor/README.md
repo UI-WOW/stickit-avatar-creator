@@ -43,12 +43,12 @@ A FastAPI service for processing PNG images to WebP format with white background
 
 ### Health Check
 ```bash
-GET http://localhost:8002/
+GET https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/
 ```
 
 ### Basic Image Processing
 ```bash
-POST http://localhost:8002/process-image
+POST https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image
 Content-Type: multipart/form-data
 
 Parameters:
@@ -60,7 +60,7 @@ Parameters:
 
 ### Advanced Image Processing
 ```bash
-POST http://localhost:8002/process-image-advanced
+POST https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image-advanced
 Content-Type: multipart/form-data
 
 Parameters:
@@ -75,7 +75,7 @@ Parameters:
 
 ### cURL Example
 ```bash
-curl -X POST "http://localhost:8002/process-image" \
+curl -X POST "https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image" \
   -F "file=@your-image.png" \
   -F "white_threshold=240" \
   -F "output_size=512" \
@@ -87,7 +87,7 @@ curl -X POST "http://localhost:8002/process-image" \
 ```python
 import requests
 
-url = "http://localhost:8002/process-image"
+url = "https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image"
 files = {"file": open("your-image.png", "rb")}
 data = {
     "white_threshold": 240,
@@ -108,7 +108,7 @@ formData.append('white_threshold', '240');
 formData.append('output_size', '512');
 formData.append('quality', '90');
 
-fetch('http://localhost:8002/process-image', {
+fetch('https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image', {
     method: 'POST',
     body: formData
 })
@@ -146,7 +146,7 @@ app.get('/generate-sticker', async (c) => {
     formData.append('output_size', '512')
     formData.append('quality', '90')
     
-    const response = await fetch('http://localhost:8002/process-image', {
+    const response = await fetch('https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev/process-image', {
       method: 'POST',
       body: formData
     })

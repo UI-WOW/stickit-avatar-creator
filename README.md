@@ -40,7 +40,7 @@ This application leverages **Gemini 2.5 Flash Image Preview** as its core AI eng
 The UI creator uses a hardcoded API configuration that can be modified in `src/lib/api-config.ts`:
 
 **API Configuration:**
-- `BASE_URL` - The URL where the API core service is running. Defaults to `http://localhost:8002` for local development. This should match wherever you are hosting/running the API core service.
+- `BASE_URL` - The URL where the API core service is running. Defaults to `https://stickit-avatar-creator-api.ui-wow-enabler-account.workers.dev` for local development. This should match wherever you are hosting/running the API core service.
 
 
 ## Useful commands:
