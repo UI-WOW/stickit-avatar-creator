@@ -17,7 +17,8 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         hasBrandIdentity: !!brandIdentity,
         hasAvatarCreation: !!avatarCreation,
         brandIdentityKeys: brandIdentity ? Object.keys(brandIdentity) : [],
-        avatarCreationKeys: avatarCreation ? Object.keys(avatarCreation) : []
+        avatarCreationKeys: avatarCreation ? Object.keys(avatarCreation) : [],
+        referenceImagesCount: avatarCreation?.referenceImages?.length || 0
       });
       
       if (!brandIdentity || !avatarCreation) {
@@ -27,33 +28,19 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 
       // Build comprehensive prompt from user preferences
       console.log('🔨 Building avatar generation prompt...');
-      let prompt = `Create a kawaii-style sticker avatar based on the following specifications:\n\n`
+      let prompt = `Create a kawaii-style sticker avatar that will be used as the base character for multiple stickers. This avatar should be designed to be consistent across different expressions and scenarios.\n\n`
       
-      // Add brand identity information
-      if (brandIdentity.avatarType) {
-        prompt += `Avatar Type: ${brandIdentity.avatarType}\n`
-        console.log(`  ✓ Avatar Type: ${brandIdentity.avatarType}`)
-      }
+      // PRIORITY 1: Avatar Creation Details (Most Important)
+      prompt += `=== AVATAR CHARACTER DESIGN (PRIMARY) ===\n`
       
-      if (brandIdentity.avatarDescription) {
-        prompt += `Purpose: ${brandIdentity.avatarDescription}\n`
-        console.log(`  ✓ Purpose: ${brandIdentity.avatarDescription.substring(0, 50)}...`)
-      }
-      
-      if (brandIdentity.personalityTraits && brandIdentity.personalityTraits.length > 0) {
-        prompt += `Personality Traits: ${brandIdentity.personalityTraits.join(', ')}\n`
-        console.log(`  ✓ Personality Traits: ${brandIdentity.personalityTraits.join(', ')}`)
-      }
-      
-      // Add avatar creation details
       if (avatarCreation.description) {
-        prompt += `Visual Description: ${avatarCreation.description}\n`
-        console.log(`  ✓ Visual Description: ${avatarCreation.description.substring(0, 50)}...`)
+        prompt += `Avatar Description: ${avatarCreation.description}\n`
+        console.log(`  ✓ Avatar Description: ${avatarCreation.description.substring(0, 50)}...`)
       }
       
-      if (avatarCreation.selectedStyle && avatarCreation.selectedStyle !== 'No specific style') {
-        prompt += `Style Preference: ${avatarCreation.selectedStyle}\n`
-        console.log(`  ✓ Style Preference: ${avatarCreation.selectedStyle}`)
+      if (avatarCreation.personality) {
+        prompt += `Avatar Personality: ${avatarCreation.personality}\n`
+        console.log(`  ✓ Avatar Personality: ${avatarCreation.personality}`)
       }
       
       if (avatarCreation.colorPalette) {
@@ -67,8 +54,23 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         }
       }
       
+      // PRIORITY 2: Brand Identity Context (Supporting)
+      prompt += `\n=== BRAND CONTEXT (SUPPORTING) ===\n`
+      
+      if (brandIdentity.avatarType) {
+        prompt += `Avatar Type: ${brandIdentity.avatarType}\n`
+        console.log(`  ✓ Avatar Type: ${brandIdentity.avatarType}`)
+      }
+      
+      if (brandIdentity.avatarDescription) {
+        prompt += `Purpose: ${brandIdentity.avatarDescription}\n`
+        console.log(`  ✓ Purpose: ${brandIdentity.avatarDescription.substring(0, 50)}...`)
+      }
+      
+      
+      
       // Add technical specifications for sticker format
-      prompt += `\nTechnical Requirements:
+      prompt += `\n=== TECHNICAL REQUIREMENTS ===
 - Kawaii-style design with thick black outlines (5-6 pixels wide)
 - Bold, clean lines with simple cel-shading
 - Strong silhouette with prominent black borders around all edges
@@ -76,16 +78,11 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 - White background
 - High contrast and vibrant colors
 - Optimized for sticker format (clear, recognizable at small sizes)
-- Professional yet approachable design`
-      
-      // Add reference to uploaded images if any
-      if (avatarCreation.referenceImages && avatarCreation.referenceImages.length > 0) {
-        prompt += `\n\nNote: The user has uploaded ${avatarCreation.referenceImages.length} reference image(s) for style inspiration.`
-        console.log(`  ✓ Reference Images: ${avatarCreation.referenceImages.length} uploaded`)
-      }
+- Professional yet approachable design
+- Design should be versatile enough to work in multiple expressions and scenarios
+- Character should have distinctive features that remain consistent across different stickers`
       
       console.log('📝 Generated prompt length:', prompt.length, 'characters');
-      console.log('🤖 Calling Gemini API for image generation...');
       
       // Get Gemini instance from context
       const gemini = c.get('gemini');
@@ -95,11 +92,64 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         return c.json({ error: 'AI service not available' }, 500);
       }
       
+      // Prepare content for Gemini API call
+      const contents: any[] = [prompt];
+      
+      // Add reference images if any
+      if (avatarCreation.referenceImages && avatarCreation.referenceImages.length > 0) {
+        console.log(`📸 Processing ${avatarCreation.referenceImages.length} reference images...`);
+        console.log('📋 Reference images data:', avatarCreation.referenceImages);
+        
+        for (const refImage of avatarCreation.referenceImages) {
+          try {
+            // Extract filename from URL
+            const url = new URL(refImage.url);
+            const filename = url.searchParams.get('filePath');
+            
+            if (filename) {
+              console.log(`  📥 Fetching reference image: ${filename}`);
+              
+              // Get the image from R2 storage
+              const imageObject = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(filename);
+              
+              if (imageObject) {
+                const imageBuffer = await imageObject.arrayBuffer();
+                const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+                
+                // Add image to contents
+                contents.push({
+                  inlineData: {
+                    mimeType: imageObject.httpMetadata?.contentType || 'image/jpeg',
+                    data: base64Image
+                  }
+                });
+                
+                console.log(`  ✅ Added reference image: ${filename}`);
+              } else {
+                console.warn(`  ⚠️ Reference image not found in storage: ${filename}`);
+              }
+            }
+          } catch (error) {
+            console.error(`  ❌ Error processing reference image:`, error);
+          }
+        }
+        
+        if (contents.length > 1) {
+          prompt += `\n\nIMPORTANT: Use the provided reference images as visual inspiration for the avatar design. Analyze the style, colors, and visual elements in these images and incorporate them into the avatar while maintaining the kawaii sticker format.`;
+          console.log(`  🎨 Enhanced prompt with ${contents.length - 1} reference images`);
+          console.log(`  📊 Total content items for Gemini: ${contents.length} (1 text + ${contents.length - 1} images)`);
+        } else {
+          console.log(`  ⚠️ No reference images were successfully processed`);
+        }
+      }
+      
+      console.log('🤖 Calling Gemini API for image generation...');
+      
       // Generate image using Gemini 2.5 Flash Image
       const geminiStartTime = Date.now();
       const response = await gemini.models.generateContent({
         model: "gemini-2.5-flash-image-preview",
-        contents: prompt,
+        contents: contents,
       });
       const geminiEndTime = Date.now();
       
@@ -236,7 +286,9 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         stickerName: stickerData?.name,
         stickerScenario: stickerData?.scenario,
         hasBrandIdentity: !!brandIdentity,
-        hasAvatarCreation: !!avatarCreation
+        hasAvatarCreation: !!avatarCreation,
+        hasGeneratedAvatar: !!(avatarCreation?.generatedAvatar?.url),
+        referenceImagesCount: avatarCreation?.referenceImages?.length || 0
       });
       
       if (!stickerData || !brandIdentity || !avatarCreation) {
@@ -246,9 +298,14 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 
       // Build comprehensive prompt for sticker generation
       console.log('🔨 Building sticker generation prompt...');
-      let prompt = `Create a kawaii-style sticker based on the following specifications:\n\n`
+      let prompt = `Create a kawaii-style sticker featuring the same character/avatar in different scenarios. The avatar should be consistent across all stickers.\n\n`
       
-      // Add sticker-specific information
+      // PRIORITY 1: Generated Avatar Image (ABSOLUTE PRIMARY REFERENCE)
+      prompt += `=== GENERATED AVATAR (ABSOLUTE PRIMARY REFERENCE) ===\n`
+      prompt += `CRITICAL: The generated avatar image provided below is the EXACT character that must appear in this sticker. This is the most important reference - everything else is secondary.\n\n`
+      
+      // PRIORITY 2: Sticker-Specific Information
+      prompt += `=== STICKER SPECIFIC DETAILS ===\n`
       prompt += `Sticker Name: ${stickerData.name}\n`
       prompt += `Usage Scenario: ${stickerData.scenario}\n`
       if (stickerData.description) {
@@ -258,26 +315,17 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         prompt += `Additional Notes: ${stickerData.notes}\n`
       }
       
-      // Add brand identity information
-      if (brandIdentity.avatarType) {
-        prompt += `\nAvatar Type: ${brandIdentity.avatarType}\n`
-      }
+      // PRIORITY 3: Avatar Creation Details (Supporting Context)
+      prompt += `\n=== AVATAR CHARACTER DESIGN (SUPPORTING CONTEXT) ===\n`
       
-      if (brandIdentity.avatarDescription) {
-        prompt += `Avatar Purpose: ${brandIdentity.avatarDescription}\n`
-      }
-      
-      if (brandIdentity.personalityTraits && brandIdentity.personalityTraits.length > 0) {
-        prompt += `Personality Traits: ${brandIdentity.personalityTraits.join(', ')}\n`
-      }
-      
-      // Add avatar creation details
       if (avatarCreation.description) {
-        prompt += `Avatar Visual Description: ${avatarCreation.description}\n`
+        prompt += `Avatar Description: ${avatarCreation.description}\n`
+        console.log(`  ✓ Avatar Description: ${avatarCreation.description.substring(0, 50)}...`)
       }
       
-      if (avatarCreation.selectedStyle && avatarCreation.selectedStyle !== 'No specific style') {
-        prompt += `Style Preference: ${avatarCreation.selectedStyle}\n`
+      if (avatarCreation.personality) {
+        prompt += `Avatar Personality: ${avatarCreation.personality}\n`
+        console.log(`  ✓ Avatar Personality: ${avatarCreation.personality}`)
       }
       
       if (avatarCreation.colorPalette) {
@@ -287,11 +335,28 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
           .join(', ')
         if (colors) {
           prompt += `Color Palette: ${colors}\n`
+          console.log(`  ✓ Color Palette: ${colors}`)
         }
       }
       
+      // PRIORITY 4: Brand Identity Context (Additional Support)
+      prompt += `\n=== BRAND CONTEXT (ADDITIONAL SUPPORT) ===\n`
+      
+      if (brandIdentity.avatarType) {
+        prompt += `Avatar Type: ${brandIdentity.avatarType}\n`
+      }
+      
+      if (brandIdentity.avatarDescription) {
+        prompt += `Avatar Purpose: ${brandIdentity.avatarDescription}\n`
+      }
+      
+      
+      if (brandIdentity.personalityTraits && brandIdentity.personalityTraits.length > 0) {
+        prompt += `Personality Traits: ${brandIdentity.personalityTraits.join(', ')}\n`
+      }
+      
       // Add technical specifications for sticker format
-      prompt += `\nTechnical Requirements:
+      prompt += `\n=== TECHNICAL REQUIREMENTS ===
 - Kawaii-style design with thick black outlines (5-6 pixels wide)
 - Bold, clean lines with simple cel-shading
 - Strong silhouette with prominent black borders around all edges
@@ -300,10 +365,13 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
 - High contrast and vibrant colors
 - Optimized for sticker format (clear, recognizable at small sizes)
 - Professional yet approachable design
-- Should match the avatar's personality and style`
+- ABSOLUTE PRIORITY: The character must be visually identical to the generated avatar image provided
+- The generated avatar is the definitive reference - all other descriptions are secondary
+- Only the expression, pose, and context should change based on the scenario
+- Maintain the exact same visual identity, features, and style as the generated avatar
+- If a generated avatar is provided, ignore conflicting descriptions and use the avatar image as the source of truth`
       
       console.log('📝 Generated sticker prompt length:', prompt.length, 'characters');
-      console.log('🤖 Calling Gemini API for sticker generation...');
       
       // Get Gemini instance from context
       const gemini = c.get('gemini');
@@ -313,11 +381,108 @@ export function setupImageGenerationRoutes(app: Hono<honoContext>) {
         return c.json({ error: 'AI service not available' }, 500);
       }
       
+      // Prepare content for Gemini API call
+      const contents: any[] = [prompt];
+      
+      // PRIORITY 1: Add generated avatar image first (MOST IMPORTANT)
+      if (avatarCreation.generatedAvatar && avatarCreation.generatedAvatar.url) {
+        console.log('🎯 Processing generated avatar image as PRIMARY reference...');
+        
+        try {
+          // Extract filename from the generated avatar URL
+          const avatarUrl = new URL(avatarCreation.generatedAvatar.url);
+          const avatarFilename = avatarUrl.searchParams.get('filename') || avatarUrl.pathname.split('/').pop();
+          
+          if (avatarFilename) {
+            console.log(`  📥 Fetching generated avatar: ${avatarFilename}`);
+            
+            // Get the generated avatar from R2 storage
+            const avatarObject = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(avatarFilename);
+            
+            if (avatarObject) {
+              const avatarBuffer = await avatarObject.arrayBuffer();
+              const base64Avatar = btoa(String.fromCharCode(...new Uint8Array(avatarBuffer)));
+              
+              // Add generated avatar as the first image (highest priority)
+              contents.push({
+                inlineData: {
+                  mimeType: avatarObject.httpMetadata?.contentType || 'image/png',
+                  data: base64Avatar
+                }
+              });
+              
+              console.log(`  ✅ Generated avatar added as PRIMARY reference: ${avatarFilename}`);
+            } else {
+              console.warn(`  ⚠️ Generated avatar not found in storage: ${avatarFilename}`);
+            }
+          }
+        } catch (error) {
+          console.error(`  ❌ Error processing generated avatar:`, error);
+        }
+      } else {
+        console.log('⚠️ No generated avatar found - stickers will be generated without the primary reference');
+      }
+      
+      // PRIORITY 2: Add reference images if any (SECONDARY)
+      if (avatarCreation.referenceImages && avatarCreation.referenceImages.length > 0) {
+        console.log(`📸 Processing ${avatarCreation.referenceImages.length} reference images for sticker generation...`);
+        console.log('📋 Reference images data for sticker:', avatarCreation.referenceImages);
+        
+        for (const refImage of avatarCreation.referenceImages) {
+          try {
+            // Extract filename from URL
+            const url = new URL(refImage.url);
+            const filename = url.searchParams.get('filePath');
+            
+            if (filename) {
+              console.log(`  📥 Fetching reference image: ${filename}`);
+              
+              // Get the image from R2 storage
+              const imageObject = await c.env.GENERAL_STORAGE_STICKIT_AVATAR_CREATOR.get(filename);
+              
+              if (imageObject) {
+                const imageBuffer = await imageObject.arrayBuffer();
+                const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+                
+                // Add image to contents
+                contents.push({
+                  inlineData: {
+                    mimeType: imageObject.httpMetadata?.contentType || 'image/jpeg',
+                    data: base64Image
+                  }
+                });
+                
+                console.log(`  ✅ Added reference image: ${filename}`);
+              } else {
+                console.warn(`  ⚠️ Reference image not found in storage: ${filename}`);
+              }
+            }
+          } catch (error) {
+            console.error(`  ❌ Error processing reference image:`, error);
+          }
+        }
+        
+        if (contents.length > 1) {
+          const hasGeneratedAvatar = avatarCreation.generatedAvatar && avatarCreation.generatedAvatar.url;
+          if (hasGeneratedAvatar) {
+            prompt += `\n\nCRITICAL INSTRUCTIONS: The FIRST image provided is the generated avatar - this is the EXACT character that must appear in the sticker. Use this as the primary reference for the character's appearance, style, and features. Any additional reference images are for style inspiration only. The character in the sticker must match the generated avatar exactly, only changing expression, pose, and context based on the scenario.`;
+          } else {
+            prompt += `\n\nIMPORTANT: Use the provided reference images as visual inspiration for the sticker design. Analyze the style, colors, and visual elements in these images and incorporate them into the sticker while maintaining the kawaii sticker format and character consistency.`;
+          }
+          console.log(`  🎨 Enhanced sticker prompt with ${contents.length - 1} images (${hasGeneratedAvatar ? 'including generated avatar' : 'reference images only'})`);
+          console.log(`  📊 Total content items for Gemini: ${contents.length} (1 text + ${contents.length - 1} images)`);
+        } else {
+          console.log(`  ⚠️ No images were successfully processed for sticker generation`);
+        }
+      }
+      
+      console.log('🤖 Calling Gemini API for sticker generation...');
+      
       // Generate image using Gemini 2.5 Flash Image
       const geminiStartTime = Date.now();
       const response = await gemini.models.generateContent({
         model: "gemini-2.5-flash-image-preview",
-        contents: prompt,
+        contents: contents,
       });
       const geminiEndTime = Date.now();
       

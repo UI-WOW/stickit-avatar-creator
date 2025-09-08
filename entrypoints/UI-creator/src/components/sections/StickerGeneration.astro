@@ -939,6 +939,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 				};
 				
 				console.log('🚀 Sending sticker generation request to API...');
+				console.log('📋 Sticker generation payload:', {
+					stickerData,
+					brandIdentity,
+					avatarCreation,
+					groupId,
+					hasGeneratedAvatar: !!(avatarCreation?.generatedAvatar?.url),
+					referenceImagesCount: avatarCreation?.referenceImages?.length || 0,
+					referenceImages: avatarCreation?.referenceImages
+				});
 				
 				// Call the API
 				const response = await fetch(`${API_BASE}/generate-sticker`, {

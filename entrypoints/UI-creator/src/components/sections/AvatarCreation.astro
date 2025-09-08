@@ -16,13 +16,14 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 		<!-- Character Description -->
 		<div class="space-y-4 mt-8">
 			<label class="text-sm font-medium text-black-700">Describe your ideal avatar *</label>
-			<p class="text-sm text-gray-500">Be creative! Describe what your AI assistant should look like and act like</p>
+			<p class="text-sm text-gray-500">Be specific about appearance, personality, and visual style. This will be used to generate consistent stickers.</p>
 			<textarea 
-				placeholder="e.g., A friendly tech-savvy sloth wearing glasses, or a professional robot with a warm smile, or a helpful wizard who loves solving problems..."
+				placeholder="e.g., A friendly tech-savvy sloth wearing round glasses, blue hoodie, and a warm smile. Has a modern, clean aesthetic with soft rounded features. Loves helping people and has an approachable, professional demeanor..."
 				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
 				id="avatarCreationDescription"
 			></textarea>
 		</div>
+
 
 		<!-- Color Palette -->
 		<div class="space-y-4 mt-8">
@@ -57,29 +58,30 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			</div>
 		</div>
 
-		<!-- Style Preferences -->
+		<!-- Avatar Personality -->
 		<div class="space-y-4 mt-8">
-			<label class="text-sm font-medium text-black-700">Sticker Style Preferences</label>
-			<p class="text-sm text-gray-500">Choose the visual style for your stickers, or skip if you've already specified it in your description</p>
-			<div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="styleSelection">
+			<label class="text-sm font-medium text-black-700">Avatar Personality</label>
+			<p class="text-sm text-gray-500">Choose the personality that best fits your avatar. This affects how they look, act, and communicate in stickers.</p>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="personalitySelection">
 				{[
-					{ name: 'No specific style', icon: '🎯', selected: true, description: 'Use description/image style' },
-					{ name: 'Cartoon', icon: '🎨', selected: false, description: 'Fun and playful' },
-					{ name: 'Minimalist', icon: '⚪', selected: false, description: 'Clean and simple' },
-					{ name: 'Realistic', icon: '📸', selected: false, description: 'Detailed and lifelike' },
-					{ name: 'Abstract', icon: '🌀', selected: false, description: 'Creative and unique' }
-				].map((style) => (
+					{ name: 'Friendly Helper', icon: '😊', selected: true, description: 'Warm, approachable, always ready to help' },
+					{ name: 'Professional Expert', icon: '👔', selected: false, description: 'Formal, knowledgeable, composed' },
+					{ name: 'Casual Companion', icon: '😌', selected: false, description: 'Relaxed, easy-going, laid back' },
+					{ name: 'Energetic Enthusiast', icon: '🚀', selected: false, description: 'Excited, dynamic, high-energy' },
+					{ name: 'Calm Guide', icon: '🧘', selected: false, description: 'Serene, reassuring, peaceful' },
+					{ name: 'Playful Friend', icon: '🎮', selected: false, description: 'Fun, entertaining, lighthearted' }
+				].map((personality) => (
 					<button 
-						class={`p-4 rounded-lg border-2 transition-all text-center hover:scale-105 transform ${
-							style.selected 
+						class={`p-4 rounded-lg border-2 transition-all text-left hover:scale-105 transform ${
+							personality.selected 
 								? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' 
 								: 'border-gray-200 hover:border-gray-300 text-gray-600 hover:shadow-sm'
 						}`}
-						data-style={style.name}
+						data-personality={personality.name}
 					>
-						<div class="text-2xl mb-2">{style.icon}</div>
-						<div class="text-sm font-medium mb-1">{style.name}</div>
-						<div class="text-xs text-gray-500">{style.description}</div>
+						<div class="text-2xl mb-2">{personality.icon}</div>
+						<div class="text-sm font-medium mb-1">{personality.name}</div>
+						<div class="text-xs text-gray-500">{personality.description}</div>
 					</button>
 				))}
 			</div>
@@ -88,8 +90,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 		<div class="grid md:grid-cols-2 gap-8 mt-8">
 			<!-- Upload Section -->
 			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Optional)</h3>
-				<p class="text-sm text-gray-500">Upload up to 3 images that inspire your avatar design</p>
+				<h3 class="text-lg font-semibold text-gray-800">Reference Images (Recommended)</h3>
+				<p class="text-sm text-gray-500">Upload up to 3 images that inspire your avatar design. These will be used as visual references to create a more accurate and personalized avatar.</p>
 				
 				<!-- Upload Area -->
 				<div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 hover:bg-indigo-50 transition-all duration-300 cursor-pointer group" id="uploadArea">
@@ -116,10 +118,10 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				</div>
 				
 				<div class="text-sm text-gray-500">
-					<p>• Character references, mascots, or style inspiration</p>
-					<p>• Supported formats: JPG, PNG, SVG</p>
-					<p>• Max file size: 10MB per image</p>
-					<p>• Maximum 3 images allowed</p>
+					<p>• <strong>Character references:</strong> Similar characters, mascots, or avatars you like</p>
+					<p>• <strong>Style inspiration:</strong> Art styles, color schemes, or visual aesthetics</p>
+					<p>• <strong>Facial features:</strong> Expressions, eye styles, or facial characteristics</p>
+					<p>• Supported formats: JPG, PNG, SVG • Max file size: 10MB per image • Maximum 3 images allowed</p>
 				</div>
 			</div>
 			
@@ -199,12 +201,12 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			});
 		});
 
-		// Style selection
-		const styleButtons = document.querySelectorAll('[data-style]');
-		styleButtons.forEach(button => {
+		// Personality selection (single select)
+		const personalityButtons = document.querySelectorAll('[data-personality]');
+		personalityButtons.forEach(button => {
 			button.addEventListener('click', function() {
-				// Remove selection from all buttons
-				styleButtons.forEach(btn => {
+				// Remove selection from all personality buttons
+				personalityButtons.forEach(btn => {
 					btn.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'shadow-md');
 					btn.classList.add('border-gray-200', 'text-gray-600');
 				});
@@ -229,25 +231,25 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				`;
 				
 				try {
-					// Get current form data
-					const currentFormData = {
-						avatarDescription: document.getElementById('avatarCreationDescription')?.value,
-						selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style,
-						colorPalette: {
-							primary: document.getElementById('color1')?.value,
-							secondary: document.getElementById('color2')?.value,
-							accent: document.getElementById('color3')?.value,
-							neutral: document.getElementById('color4')?.value
-						},
-						referenceImages: uploadedImages
-					};
+				// Get current form data
+				const currentFormData = {
+					avatarDescription: document.getElementById('avatarCreationDescription')?.value,
+					personality: document.querySelector('[data-personality].border-indigo-500')?.dataset.personality,
+					colorPalette: {
+						primary: document.getElementById('color1')?.value,
+						secondary: document.getElementById('color2')?.value,
+						accent: document.getElementById('color3')?.value,
+						neutral: document.getElementById('color4')?.value
+					},
+					referenceImages: uploadedImages
+				};
 
 					// Get centralized state for brand identity
 					const state = window.stickitGroupState || {};
 					const brandIdentity = state.input?.brandIdentity || {};
 					const avatarCreation = {
 						description: currentFormData.avatarDescription,
-						selectedStyle: currentFormData.selectedStyle,
+						personality: currentFormData.personality,
 						colorPalette: currentFormData.colorPalette,
 						referenceImages: currentFormData.referenceImages
 					};
@@ -390,7 +392,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				// Get form data
 				const formData = {
 					avatarDescription: document.getElementById('avatarCreationDescription')?.value,
-					selectedStyle: document.querySelector('[data-style].border-indigo-500')?.dataset.style,
+					personality: document.querySelector('[data-personality].border-indigo-500')?.dataset.personality,
 					colorPalette: {
 						primary: document.getElementById('color1')?.value,
 						secondary: document.getElementById('color2')?.value,
@@ -404,7 +406,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				console.log('💾 Saving avatar creation data:', {
 					hasGeneratedAvatar: !!generatedAvatar,
 					generatedAvatarFilename: generatedAvatar?.filename,
-					referenceImagesCount: uploadedImages.length
+					referenceImagesCount: uploadedImages.length,
+					referenceImages: uploadedImages
 				});
 				
 				// Show user feedback about what's being saved
@@ -418,7 +421,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				window.dispatchEvent(new CustomEvent('sectionDataUpdated', { detail: {
 					avatarCreation: {
 						description: formData.avatarDescription,
-						selectedStyle: formData.selectedStyle,
+						personality: formData.personality,
 						colorPalette: formData.colorPalette,
 						referenceImages: formData.referenceImages,
 						generatedAvatar: formData.generatedAvatar
@@ -557,13 +560,15 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 				const result = await response.json();
 				
 				// Add to uploaded images
-				uploadedImages.push({
+				const imageData = {
 					filename: result.filename,
 					url: result.url,
 					name: file.name,
 					size: file.size,
 					type: file.type
-				});
+				};
+				console.log('📸 Adding uploaded image:', imageData);
+				uploadedImages.push(imageData);
 
 				// Update UI
 				updateImageList();
@@ -587,6 +592,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			imageList.innerHTML = '';
 
 			uploadedImages.forEach((image, index) => {
+				console.log(`🖼️ Displaying image ${index}:`, {
+					name: image.name,
+					size: image.size,
+					sizeInMB: (image.size / 1024 / 1024).toFixed(1),
+					url: image.url
+				});
+				
 				const imageItem = document.createElement('div');
 				imageItem.className = 'flex items-center gap-3 p-3 bg-gray-50 rounded-lg';
 				imageItem.innerHTML = `
@@ -651,13 +663,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			const ac = state?.input?.avatarCreation || {};
 			const descEl = document.getElementById('avatarCreationDescription');
 			if (descEl instanceof HTMLTextAreaElement && typeof ac.description === 'string') descEl.value = ac.description;
-			// Style selection
-			const styleButtons = document.querySelectorAll('[data-style]');
-			if (typeof ac.selectedStyle === 'string') {
-				styleButtons.forEach(btn => {
+			// Personality selection
+			const personalityButtons = document.querySelectorAll('[data-personality]');
+			if (typeof ac.personality === 'string') {
+				personalityButtons.forEach(btn => {
 					btn.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'shadow-md');
 					btn.classList.add('border-gray-200', 'text-gray-600');
-					if (btn instanceof HTMLElement && btn.dataset.style === ac.selectedStyle) {
+					if (btn instanceof HTMLElement && btn.dataset.personality === ac.personality) {
 						btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'shadow-md');
 						btn.classList.remove('border-gray-200', 'text-gray-600');
 					}
@@ -674,11 +686,15 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '/api';
 			if (color3 instanceof HTMLInputElement && typeof palette.accent === 'string') color3.value = palette.accent;
 			if (color4 instanceof HTMLInputElement && typeof palette.neutral === 'string') color4.value = palette.neutral;
 			
+			
 			// Load reference images if they exist
 			if (Array.isArray(ac.referenceImages)) {
+				console.log('🔄 Loading reference images from state:', ac.referenceImages);
 				uploadedImages = ac.referenceImages;
 				updateImageList();
 				updateUploadArea();
+			} else {
+				console.log('ℹ️ No reference images found in state');
 			}
 			
 			// Load generated avatar if it exists

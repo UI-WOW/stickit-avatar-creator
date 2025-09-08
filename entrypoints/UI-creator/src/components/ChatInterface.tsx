@@ -317,6 +317,9 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded 
     }
 
     // AI message - left aligned with white background
+    const hasStickers = message.stickers && message.stickers.length > 0;
+    const messageMaxWidth = hasStickers ? 'max-w-[400px]' : 'max-w-[280px]';
+    
     return (
       <div key={message.id} className="flex items-start space-x-2">
         <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -332,18 +335,18 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded 
             </div>
           )}
         </div>
-        <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[280px]">
+        <div className={`bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm ${messageMaxWidth}`}>
           {message.text && (
-            <p className="text-sm text-gray-800">{message.text}</p>
+            <p className={`text-gray-800 ${hasStickers ? 'text-base font-medium' : 'text-sm'}`}>{message.text}</p>
           )}
           {message.stickers && message.stickers.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <div className="flex flex-wrap gap-3 justify-center mt-3">
               {message.stickers.map((sticker) => (
-                <div key={sticker.id}>
+                <div key={sticker.id} className="transform hover:scale-105 transition-transform duration-200">
                   {sticker.imageUrl ? (
-                    <img src={sticker.imageUrl} alt={sticker.name} className="w-16 h-16 rounded-lg" />
+                    <img src={sticker.imageUrl} alt={sticker.name} className="w-24 h-24 rounded-xl border-2 border-white" />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500 text-xs">?</div>
+                    <div className="w-24 h-24 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 text-sm border-2 border-white">?</div>
                   )}
                 </div>
               ))}
@@ -399,13 +402,13 @@ export default function ChatInterface({ apiBase, groupName, avatarUrl, embedded 
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
               <img src={chatAvatarUrl} alt="AI" className="w-6 h-6 rounded" />
             </div>
-            <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm max-w-[280px]">
-              <p className="text-sm text-gray-800 mb-2">Great question! Let me show you something cool:</p>
+            <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 max-w-[400px]">
+              <p className="text-base font-medium text-gray-800 mb-3">Great question! Let me show you something cool:</p>
               <div className="flex justify-center">
                 {availableStickers[0].imageUrl ? (
-                  <img src={availableStickers[0].imageUrl} alt={availableStickers[0].name} className="w-16 h-16 rounded-lg" />
+                  <img src={availableStickers[0].imageUrl} alt={availableStickers[0].name} className="w-24 h-24 rounded-xl border-2 border-white transform hover:scale-105 transition-transform duration-200" />
                 ) : (
-                  <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500">?</div>
+                  <div className="w-24 h-24 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 text-sm border-2 border-white">?</div>
                 )}
               </div>
             </div>

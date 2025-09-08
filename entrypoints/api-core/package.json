@@ -2,7 +2,7 @@
   "name": "@repo/entrypoints-api-core",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --port 8004",
+    "dev": "wrangler dev --port 8002",
     "build-wrangler-local": "tsc && wrangler deploy --dry-run",
     "deploy": "tsc && wrangler deploy",
     "deploy:staging": "tsc && wrangler deploy --env staging",

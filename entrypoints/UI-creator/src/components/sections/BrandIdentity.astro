@@ -42,41 +42,13 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 		<div class="space-y-2 mt-8">
 			<label class="text-sm font-medium text-black-700">What will your avatar help with? *</label>
 			<textarea 
-				placeholder="Describe what your avatar will do and how it will help users. This helps us create the right personality and stickers..."
+				placeholder="Describe what your avatar will do and how it will help users. Focus on the context and scenarios where stickers will be used..."
 				class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-24 resize-none hover:border-gray-300"
 				id="avatarDescription"
 			></textarea>
 		</div>
 
-		<!-- Avatar Personality -->
-		<div class="space-y-4 mt-8">
-			<label class="text-sm font-medium text-black-700">Avatar Personality *</label>
-			<p class="text-sm text-gray-500">Select 3-5 traits that best describe your avatar's personality</p>
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="personalityTraits">
-				{[
-					{ name: 'Friendly', icon: '😊', selected: true },
-					{ name: 'Professional', icon: '👔', selected: true },
-					{ name: 'Helpful', icon: '🤝', selected: true },
-					{ name: 'Innovative', icon: '💡', selected: false },
-					{ name: 'Trustworthy', icon: '🛡️', selected: false },
-					{ name: 'Creative', icon: '🎨', selected: false },
-					{ name: 'Energetic', icon: '⚡', selected: false },
-					{ name: 'Reliable', icon: '🔒', selected: false }
-				].map((trait) => (
-					<button 
-						class={`p-3 rounded-lg border-2 transition-all text-left hover:scale-105 transform ${
-							trait.selected 
-								? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md' 
-								: 'border-gray-200 hover:border-gray-300 text-gray-600 hover:shadow-sm'
-						}`}
-						data-trait={trait.name}
-					>
-						<div class="text-lg mb-1">{trait.icon}</div>
-						<div class="text-sm font-medium">{trait.name}</div>
-					</button>
-				))}
-			</div>
-		</div>
+
 
 
 
@@ -113,41 +85,8 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 			if (avatarTypeEl && typeof bi.avatarType === 'string') avatarTypeEl.value = bi.avatarType;
 			const descEl = /** @type {HTMLTextAreaElement|null} */ (document.getElementById('avatarDescription'));
 			if (descEl && typeof bi.avatarDescription === 'string') descEl.value = bi.avatarDescription;
-			// Personality traits toggle
-			if (Array.isArray(bi.personalityTraits)) {
-				document.querySelectorAll('[data-trait]').forEach(btn => {
-					const el = btn && btn.tagName ? btn : null;
-					const tname = el?.dataset?.trait;
-					const selected = !!(tname && bi.personalityTraits.includes(tname));
-					if (el) {
-						el.classList.toggle('border-indigo-500', selected);
-						el.classList.toggle('bg-indigo-50', selected);
-						el.classList.toggle('text-indigo-700', selected);
-						el.classList.toggle('shadow-md', selected);
-						el.classList.toggle('border-gray-200', !selected);
-						el.classList.toggle('text-gray-600', !selected);
-					}
-				});
-			}
 		});
 
-		// Personality traits selection
-		const traitButtons = document.querySelectorAll('[data-trait]');
-		traitButtons.forEach(button => {
-			button.addEventListener('click', function() {
-				const isSelected = this.classList.contains('border-indigo-500');
-				const selectedCount = document.querySelectorAll('[data-trait].border-indigo-500').length;
-				
-				if (isSelected || selectedCount < 5) {
-					this.classList.toggle('border-indigo-500');
-					this.classList.toggle('bg-indigo-50');
-					this.classList.toggle('text-indigo-700');
-					this.classList.toggle('shadow-md');
-					this.classList.toggle('border-gray-200');
-					this.classList.toggle('text-gray-600');
-				}
-			});
-		});
 
 
 		// Save button
@@ -158,9 +97,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 				const formData = {
 					collectionName: document.getElementById('stickerGroupName')?.value,
 					avatarType: document.getElementById('avatarType')?.value,
-					avatarDescription: document.getElementById('avatarDescription')?.value,
-					targetAudience: document.getElementById('targetAudience')?.value,
-					personalityTraits: Array.from(document.querySelectorAll('[data-trait].border-indigo-500')).map(btn => btn.dataset.trait)
+					avatarDescription: document.getElementById('avatarDescription')?.value
 				};
 				
 				// Update centralized state and request unified save
@@ -168,8 +105,7 @@ const API_BASE = import.meta.env.PUBLIC_API_BASE || '';
 					name: formData.collectionName,
 					brandIdentity: {
 						avatarType: formData.avatarType,
-						avatarDescription: formData.avatarDescription,
-						personalityTraits: formData.personalityTraits
+						avatarDescription: formData.avatarDescription
 					}
 				}}));
 				window.dispatchEvent(new CustomEvent('requestSave'));
