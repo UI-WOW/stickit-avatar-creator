@@ -9,6 +9,8 @@ export function setupMiddleware(app: Hono<honoContext>) {
   // CORS for UI dev server and production
   const allowedOrigins = [
     'http://localhost:8001',
+    'https://www.stickit.ui-wow.com',
+    'https://stickit.ui-wow.com',
   ]
 
   app.use('*', cors({
