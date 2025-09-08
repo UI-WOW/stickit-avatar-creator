@@ -11,6 +11,7 @@ export function setupMiddleware(app: Hono<honoContext>) {
     'http://localhost:8001',
     'https://www.stickit.ui-wow.com',
     'https://stickit.ui-wow.com',
+    "http://192.168.20.86:8001"
   ]
 
   app.use('*', cors({
@@ -25,12 +26,14 @@ export function setupMiddleware(app: Hono<honoContext>) {
 
   // Middleware: derive userId from cookies and put into context
   app.use('*', async (c, next) => {
-    const cookieHeader = c.req.header('cookie') || ''
-    const matchNew = cookieHeader.match(/(?:^|;\s*)stickit-user=([^;]+)/)
-    const matchLegacy = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
-    const rawId = (matchNew && matchNew[1]) || (matchLegacy && matchLegacy[1]) || null
-    const userId = rawId ? decodeURIComponent(rawId) : null
-    if (userId) c.set('userId', userId)
+    // Temporarily using hardcoded user ID for all requests
+    // TODO: Restore cookie-based user ID handling
+    // const cookieHeader = c.req.header('cookie') || ''
+    // const matchNew = cookieHeader.match(/(?:^|;\s*)stickit-user=([^;]+)/)
+    // const matchLegacy = cookieHeader.match(/(?:^|;\s*)sticket-sid=([^;]+)/)
+    // const rawId = (matchNew && matchNew[1]) || (matchLegacy && matchLegacy[1]) || null
+    // const userId = rawId ? decodeURIComponent(rawId) : null
+    c.set('userId', 'test-user-123')
     await next()
   })
 
