@@ -1,22 +1,22 @@
 {
-  "name": "chatbot-fito-cf-worker",
+  "name": "stickit-avatar-creator-api",
   "main": "src/index.ts",
   "compatibility_date": "2025-08-25",
 
   "r2_buckets": [
     {
       "binding": "GENERAL_STORAGE_STICKIT_AVATAR_CREATOR",
-      "bucket_name": "general-storage-stickit-avatar-creator"
+      "bucket_name": "stickit-avatar-creator-general-storage"
     },
     {
       "binding": "LOGGER_STORAGE_STICKIT_AVATAR_CREATOR",
-      "bucket_name": "logger-storage-stickit-avatar-creator"
+      "bucket_name": "stickit-avatar-creator-logger-storage"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "APP_KV",
-      "id": "stickit-avatar-creator-kv"
+      "id": "stickit-avatar-creator-app-kv"
     }
   ],
 
